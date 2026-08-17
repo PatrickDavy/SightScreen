@@ -8,12 +8,12 @@ import React from 'react';
 
 import { CaptureScreen } from '@/screens/capture/CaptureScreen';
 import { OnboardingScreen } from '@/screens/onboarding/OnboardingScreen';
-import { Placeholder } from '@/screens/Placeholder';
 
+import { ROOT_NAVIGATOR_ID } from './rootNavigation';
 import { TabNavigator } from './TabNavigator';
 import type { RootStackParamList } from './types';
 
-const Root = createNativeStackNavigator<RootStackParamList>();
+const Root = createNativeStackNavigator<RootStackParamList, typeof ROOT_NAVIGATOR_ID>();
 
 export interface RootNavigatorProps {
   initialRoute: 'Tabs' | 'Onboarding';
@@ -22,7 +22,11 @@ export interface RootNavigatorProps {
 
 export function RootNavigator({ initialRoute, initialTab }: RootNavigatorProps) {
   return (
-    <Root.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
+    <Root.Navigator
+      id={ROOT_NAVIGATOR_ID}
+      initialRouteName={initialRoute}
+      screenOptions={{ headerShown: false }}
+    >
       <Root.Screen name="Tabs">{() => <TabNavigator initialTab={initialTab} />}</Root.Screen>
 
       <Root.Group

@@ -129,9 +129,19 @@ async function bowlSpell(deliveries: number, options: SetupOptions = {}) {
   return ctx;
 }
 
-async function processSpell() {
+/**
+ * Start processing and wait for it to actually finish.
+ *
+ * Waiting a fixed number of milliseconds races the promise chain that reports
+ * progress, so this waits on the post-condition — the session reaching
+ * `complete` — instead.
+ */
+async function processSpell(repos: Repos) {
   await press(screen.getByTestId('process-button'));
-  await advanceMs(2000);
+  jest.advanceTimersByTime(2000);
+  await waitFor(() => {
+    expect(repos.sessions.listSummaries()[0]?.session.status).toBe('complete');
+  });
 }
 
 describe('capture spine', () => {
@@ -277,7 +287,7 @@ describe('capture spine', () => {
 
   it('processes the session into deliveries, an insight and a review', async () => {
     const { repos, cueLog } = await bowlSpell(5);
-    await processSpell();
+    await processSpell(repos);
 
     const summaries = repos.sessions.listSummaries();
     expect(summaries).toHaveLength(1);
@@ -301,7 +311,7 @@ describe('capture spine', () => {
 
   it('stores every delivery with a band and a frame count', async () => {
     const { repos } = await bowlSpell(3);
-    await processSpell();
+    await processSpell(repos);
 
     const session = repos.sessions.listSummaries()[0]!.session;
     for (const delivery of repos.deliveries.listForSession(session.id)) {
@@ -313,7 +323,7 @@ describe('capture spine', () => {
   it('marks every delivery low-confidence when a check was overridden', async () => {
     // A phone leaning well past the 3° tolerance.
     const { repos } = await bowlSpell(3, { fakes: { tiltDeg: 12 } });
-    await processSpell();
+    await processSpell(repos);
 
     const session = repos.sessions.listSummaries()[0]!.session;
     expect(session.lowConfOverride).toBe(true);

@@ -12,9 +12,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import { Icon, type IconName } from '@/components';
+import { HistoryScreen } from '@/screens/home/HistoryScreen';
+import { HomeScreen } from '@/screens/home/HomeScreen';
+import { DrillScreen } from '@/screens/improve/DrillScreen';
+import { ImproveScreen } from '@/screens/improve/ImproveScreen';
 import { LoadScreen } from '@/screens/load/LoadScreen';
 import { RestScreen } from '@/screens/load/RestScreen';
-import { Placeholder } from '@/screens/Placeholder';
 import { DeliveryScreen } from '@/screens/review/DeliveryScreen';
 import { ExplainerScreen } from '@/screens/review/ExplainerScreen';
 import { InsightScreen } from '@/screens/review/InsightScreen';
@@ -43,9 +46,8 @@ const stackOptions = { headerShown: false } as const;
 function HomeStackScreen() {
   return (
     <HomeStack.Navigator screenOptions={stackOptions}>
-      <HomeStack.Screen name="Home">
-        {() => <Placeholder title="Home" screenId="S10" />}
-      </HomeStack.Screen>
+      <HomeStack.Screen name="Home" component={HomeScreen} />
+      <HomeStack.Screen name="History" component={HistoryScreen} />
       <HomeStack.Screen name="Review" component={ReviewScreen} />
       <HomeStack.Screen name="Delivery" component={DeliveryScreen} />
       <HomeStack.Screen name="Explainer" component={ExplainerScreen} />
@@ -57,9 +59,8 @@ function HomeStackScreen() {
 function ImproveStackScreen() {
   return (
     <ImproveStack.Navigator screenOptions={stackOptions}>
-      <ImproveStack.Screen name="Improve">
-        {() => <Placeholder title="Improve" screenId="S40" />}
-      </ImproveStack.Screen>
+      <ImproveStack.Screen name="Improve" component={ImproveScreen} />
+      <ImproveStack.Screen name="Drill" component={DrillScreen} />
     </ImproveStack.Navigator>
   );
 }

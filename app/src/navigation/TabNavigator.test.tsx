@@ -19,7 +19,7 @@ describe('navigation shell', () => {
 
   it('lands an adult on Home', async () => {
     await renderScreen(<RootNavigator initialRoute="Tabs" initialTab="HomeTab" />);
-    expect(screen.getByTestId('placeholder-S10')).toBeTruthy();
+    expect(screen.getByTestId('home-screen')).toBeTruthy();
   });
 
   it('lands an under-18 account on the workload surface', async () => {
