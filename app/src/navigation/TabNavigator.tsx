@@ -13,6 +13,10 @@ import React from 'react';
 
 import { Icon, type IconName } from '@/components';
 import { Placeholder } from '@/screens/Placeholder';
+import { DeliveryScreen } from '@/screens/review/DeliveryScreen';
+import { ExplainerScreen } from '@/screens/review/ExplainerScreen';
+import { InsightScreen } from '@/screens/review/InsightScreen';
+import { ReviewScreen } from '@/screens/review/ReviewScreen';
 import { color, font, sp } from '@/theme/tokens';
 
 import { BowlButton } from './BowlButton';
@@ -38,9 +42,10 @@ function HomeStackScreen() {
       <HomeStack.Screen name="Home">
         {() => <Placeholder title="Home" screenId="S10" />}
       </HomeStack.Screen>
-      <HomeStack.Screen name="Review">
-        {() => <Placeholder title="Session review" screenId="S30" />}
-      </HomeStack.Screen>
+      <HomeStack.Screen name="Review" component={ReviewScreen} />
+      <HomeStack.Screen name="Delivery" component={DeliveryScreen} />
+      <HomeStack.Screen name="Explainer" component={ExplainerScreen} />
+      <HomeStack.Screen name="Insight" component={InsightScreen} />
     </HomeStack.Navigator>
   );
 }
