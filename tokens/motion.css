@@ -1,0 +1,7 @@
+:root{
+--dur-1:120ms; /* @kind other */ /* hover, press */
+--dur-2:200ms; /* @kind other */ /* toggles, tabs */
+--dur-3:320ms; /* @kind other */ /* dialogs, screen changes */
+--ease-swift:cubic-bezier(.2,0,0,1); /* @kind other */ /* default: fast out, no bounce */
+--ease-inout:cubic-bezier(.4,0,.2,1); /* @kind other */
+}

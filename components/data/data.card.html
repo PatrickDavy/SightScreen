@@ -1,0 +1,24 @@
+<!-- @dsCard group="Components" viewport="700x400" name="Data" subtitle="Metric, workload meter, cue card" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>body{margin:0;padding:16px;background:var(--chalk)}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="../../_ds_bundle.js"></script>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { Metric, WorkloadMeter, CueCard, Card } = window.SightscreenDesignSystem_9d8748;
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
+    <div style={{ display: 'grid', gap: 16 }}>
+      <Card><Metric label="Fastest ball" value="116.2" unit="km/h" band={2.3} sample="from 26 frames" size="lg" /></Card>
+      <Card><Metric label="Front knee flexion at contact" value={38} unit="°" band={5} size="sm" range={{ min: 0, max: 60, good: [0, 20] }} /></Card>
+      <Card><WorkloadMeter label="This week" used={18} limit={21} unit="overs" guideline="U17 guideline · 21 overs a week" /></Card>
+    </div>
+    <CueCard cue="Brace your front knee" gain="+3–6 km/h estimated"
+      detail="At front-foot contact your knee flexes to 38° ±5°. Bowlers a band quicker hold it under 20°. Land heel-first and push tall through the front leg."
+      actionLabel="Watch the drill" onAction={() => {}} />
+  </div>
+);
+</script></body></html>

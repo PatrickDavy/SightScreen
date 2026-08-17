@@ -1,0 +1,73 @@
+<!-- @dsCard group="App" viewport="390x844" name="Sightscreen app" subtitle="Sessions · record · result · workload" --><!-- @startingPoint section="App screens" subtitle="The four core app surfaces, interactive" viewport="390x844" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sightscreen app</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>body{margin:0;background:#E8E5DA}#root{max-width:390px;margin:0 auto;height:100dvh}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="../../_ds_bundle.js"></script>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const NS = window.SightscreenDesignSystem_9d8748;
+const { SessionsScreen, RecordScreen, ResultScreen, WorkloadScreen, Icon, Toast } = NS;
+const sessions = [
+  { id: 1, label: 'Club nets', date: 'Sat 15 Aug', balls: 14, best: 116.2, band: 2.3, avg: 109.8, avgBand: 1.8, frames: 26 },
+  { id: 2, label: 'School nets', date: 'Tue 12 Aug', balls: 9, best: 113.8, band: 2.9, avg: 108.1, avgBand: 2.1, frames: 22 },
+  { id: 3, label: 'Match — 2nd XI', date: 'Sun 9 Aug', balls: 11, best: 114.5, band: 3.1, avg: 107.6, avgBand: 2.4, frames: 19 },
+];
+const pb = { best: 118.6, band: 2.4, date: 'set 2 Aug · club nets' };
+const fresh = { id: 0, label: 'Just now', date: 'Sun 17 Aug', balls: 6, best: 115.1, band: 2.5, avg: 110.4, avgBand: 1.9, frames: 24 };
+function StatusBar() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px 4px' }}>
+      <span style={{ font: '600 13px/1 var(--font-ui)' }}>18:04</span>
+      <span style={{ display: 'flex', gap: 5, color: 'var(--ink)' }}>
+        <Icon name="signal" size={14} /><Icon name="wifi" size={14} /><Icon name="battery-full" size={16} />
+      </span>
+    </div>
+  );
+}
+function TabBar({ tab, onTab }) {
+  const items = [
+    { id: 'sessions', icon: 'list', label: 'Sessions' },
+    { id: 'record', icon: 'video', label: 'Record' },
+    { id: 'workload', icon: 'shield', label: 'Workload' },
+  ];
+  return (
+    <div style={{ display: 'flex', borderTop: 'var(--border-hair)', background: 'var(--paper)', paddingBottom: 10 }}>
+      {items.map(it => {
+        const on = it.id === tab;
+        return (
+          <button key={it.id} type="button" onClick={() => onTab(it.id)}
+            style={{ flex: 1, display: 'grid', justifyItems: 'center', gap: 3, padding: '9px 0 2px', background: 'none', border: 'none', cursor: 'pointer', color: on ? 'var(--ink)' : 'var(--ink-3)', transition: 'color var(--dur-1) var(--ease-swift)' }}>
+            <Icon name={it.icon} size={20} strokeWidth={on ? 2.25 : 2} />
+            <span style={{ font: `${on ? 600 : 500} 10px/1 var(--font-ui)`, letterSpacing: '.03em' }}>{it.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+function App() {
+  const [tab, setTab] = React.useState('sessions');
+  const [open, setOpen] = React.useState(null);
+  const [toast, setToast] = React.useState(null);
+  const measured = () => { setTab('sessions'); setOpen(fresh); setToast('Measured. 6 balls tracked.'); setTimeout(() => setToast(null), 3600); };
+  const goTab = t => { setOpen(null); setTab(t); };
+  let screen = null;
+  if (tab === 'sessions') screen = open ? <ResultScreen session={open} onBack={() => setOpen(null)} /> : <SessionsScreen sessions={sessions} pb={pb} onOpen={setOpen} onRecord={() => setTab('record')} />;
+  if (tab === 'record') screen = <RecordScreen onMeasured={measured} />;
+  if (tab === 'workload') screen = <WorkloadScreen />;
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--chalk)', borderLeft: 'var(--border-hair)', borderRight: 'var(--border-hair)', position: 'relative', overflow: 'hidden' }}>
+      <StatusBar />
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>{screen}</div>
+      {toast ? <div style={{ position: 'absolute', left: 16, right: 16, bottom: 86, display: 'flex', justifyContent: 'center' }}><Toast tone="good" onDismiss={() => setToast(null)}>{toast}</Toast></div> : null}
+      <TabBar tab={tab} onTab={goTab} />
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script></body></html>

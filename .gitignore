@@ -1,0 +1,7 @@
+# macOS
+.DS_Store
+
+# dependencies and build output (the app has its own .gitignore too)
+node_modules/
+dist/
+.expo/

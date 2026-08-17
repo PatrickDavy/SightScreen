@@ -1,0 +1,31 @@
+<!-- @dsCard group="Components" viewport="700x400" name="Feedback" subtitle="Toast, tooltip, dialog" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>body{margin:0;padding:16px;background:var(--chalk)}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="../../_ds_bundle.js"></script>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { Toast, Tooltip, Dialog, Button, Icon } = window.SightscreenDesignSystem_9d8748;
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <div style={{ display: 'grid', gap: 12 }}>
+    <div style={{ display: 'grid', gap: 8, justifyItems: 'start' }}>
+      <Toast tone="good" onDismiss={() => {}}>Saved. 14 balls measured.</Toast>
+      <Toast tone="over">Too shaky to read. Prop the phone on something solid and go again.</Toast>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '400 13px/1 var(--font-ui)', color: 'var(--ink-2)' }}>
+        Hip–shoulder separation
+        <Tooltip label="Angle between hips and shoulders at back-foot contact"><span style={{ display: 'inline-flex', color: 'var(--ink-3)', cursor: 'help' }}><Icon name="info" size={14} /></span></Tooltip>
+        — hover the icon
+      </div>
+    </div>
+    <div style={{ transform: 'translateZ(0)', position: 'relative', height: 212, overflow: 'hidden', border: '1px solid var(--line)', borderRadius: 8 }}>
+      <Dialog open title="Delete this session?" onClose={() => {}}
+        footer={<React.Fragment><Button variant="secondary">Keep it</Button><Button variant="danger">Delete</Button></React.Fragment>}>
+        14 balls and their measurements will be gone for good.
+      </Dialog>
+    </div>
+  </div>
+);
+</script></body></html>

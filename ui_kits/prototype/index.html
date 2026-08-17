@@ -1,0 +1,152 @@
+<!-- @dsCard group="Prototype" viewport="390x844" name="Full app prototype" subtitle="Screen-flow spec v0.1 — onboarding to paywall, interactive" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sightscreen — app prototype</title>
+<link rel="stylesheet" href="../../styles.css">
+<style>body{margin:0;background:#E8E5DA}#root{max-width:390px;margin:0 auto;height:100dvh}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="../../_ds_bundle.js"></script>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const NS = window.SightscreenDesignSystem_9d8748;
+const { Icon, Toast, Button, Badge } = NS;
+function Head({ title, onBack, right }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 32 }}>
+      <button type="button" onClick={onBack} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', padding: '4px 0', font: '600 13px/1 var(--font-ui)', color: 'var(--ink-2)', cursor: 'pointer' }}>
+        <Icon name="chevron-left" size={16} />{title}
+      </button>
+      {right || null}
+    </div>
+  );
+}
+const cvv = (v, unit) => unit === 'mph' ? Math.round(v * 6.21371) / 10 : v;
+function beep(freq) {
+  try {
+    const C = window.__ssac || (window.__ssac = new (window.AudioContext || window.webkitAudioContext)());
+    const o = C.createOscillator(), g = C.createGain();
+    o.frequency.value = freq || 880; o.connect(g); g.connect(C.destination);
+    g.gain.setValueAtTime(.1, C.currentTime); g.gain.exponentialRampToValueAtTime(.0001, C.currentTime + .25);
+    o.start(); o.stop(C.currentTime + .26);
+  } catch (e) {}
+}
+function say(t) { try { speechSynthesis.speak(new SpeechSynthesisUtterance(t)); } catch (e) {} }
+window.SSP = { NS, Head, cvv, beep, say };
+const mkD = (n, seed) => Array.from({ length: n }, (_, i) => ({ n: i + 1, speed: Math.round((106 + Math.sin(i * 2.7 + seed) * 4 + (i % 7 === 3 ? 6 : 0)) * 10) / 10, band: Math.round((1.8 + ((i * 7) % 10) / 10) * 10) / 10, conf: i % 5 === 3 ? 'low' : 'ok' }));
+const seedSessions = [
+  { id: 1, label: 'Net session', date: 'Sat 15 Aug', balls: 14, best: 116.2, band: 2.3, avg: 109.8, avgBand: 1.8, frames: 26, d: mkD(14, 1), prev: 114.9 },
+  { id: 2, label: 'Drill check', date: 'Tue 12 Aug', balls: 9, best: 113.8, band: 2.9, avg: 108.1, avgBand: 2.1, frames: 22, d: mkD(9, 2), prev: 114.5 },
+  { id: 3, label: 'Match spell', date: 'Sun 9 Aug', balls: 11, best: 114.5, band: 3.1, avg: 107.6, avgBand: 2.4, frames: 19, d: mkD(11, 3), prev: 113.9 },
+];
+const KEY = 'ss-proto-v1';
+function App() {
+  const saved = React.useMemo(() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }, []);
+  const [user, setUser] = React.useState(saved.user || null);
+  const [calib, setCalib] = React.useState(!!saved.calib);
+  const [monthUsed, setMonthUsed] = React.useState(saved.monthUsed != null ? saved.monthUsed : 3);
+  const [sessions, setSessions] = React.useState(seedSessions);
+  const [stack, setStack] = React.useState([{ v: saved.user && saved.user.u18 ? 'load' : 'home' }]);
+  const [toast, setToast] = React.useState(null);
+  const [pay, setPay] = React.useState(false);
+  const [share, setShare] = React.useState(false);
+  const [captureType, setCaptureType] = React.useState('Net session');
+  React.useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify({ user, calib, monthUsed })); } catch (e) {} }, [user, calib, monthUsed]);
+  const push = (v, p) => setStack(s => [...s, Object.assign({ v }, p || {})]);
+  const pop = () => setStack(s => s.length > 1 ? s.slice(0, -1) : s);
+  const setTab = t => setStack([{ v: t }]);
+  const note = t => { setToast(t); setTimeout(() => setToast(null), 3400); };
+  const app = {
+    user, u18: user && user.u18, sessions, monthUsed, calib, captureType, extraBalls: sessions.length > 3 ? sessions[0].balls : 0,
+    push, pop, setTab, note, setCalib, setCaptureType,
+    setUnit: u => setUser(x => Object.assign({}, x, { unit: u })),
+    openPay: () => setPay(true), openShare: () => setShare(true),
+    finishCapture: sess => {
+      setSessions(s => [sess, ...s]);
+      const used = monthUsed + 1; setMonthUsed(used);
+      setStack([{ v: user.u18 ? 'load' : 'home' }, { v: 'review', id: sess.id }]);
+      if (used > 3) setPay(true); else note('Processed. ' + sess.balls + ' deliveries analysed.');
+    },
+    resetAll: () => { try { localStorage.removeItem(KEY); } catch (e) {} setUser(null); setCalib(false); setMonthUsed(3); setSessions(seedSessions); setStack([{ v: 'home' }]); },
+  };
+  const { ProtoOnboarding, ProtoCapture, ProtoHome, ProtoReview, ProtoImprove, ProtoLoad, ProtoYou } = NS;
+  const top = stack[stack.length - 1];
+  const tabs = ['home', 'improve', 'load', 'you'];
+  let content = null;
+  if (!user) content = <ProtoOnboarding note={note} onDone={(u, first) => { setUser(u); setStack([{ v: u.u18 ? 'load' : 'home' }].concat(first ? [{ v: 'capture' }] : [])); }} />;
+  else if (top.v === 'capture') content = <ProtoCapture app={app} />;
+  else if (['review', 'delivery', 'explainer', 'insight'].indexOf(top.v) > -1) content = <ProtoReview app={app} view={top} />;
+  else if (['improve', 'drill', 'library', 'retest'].indexOf(top.v) > -1) content = <ProtoImprove app={app} view={top} />;
+  else if (['load', 'rest'].indexOf(top.v) > -1) content = <ProtoLoad app={app} view={top} />;
+  else if (['you', 'sub', 'linked', 'privacy'].indexOf(top.v) > -1) content = <ProtoYou app={app} view={top} />;
+  else content = <ProtoHome app={app} view={top} />;
+  const showTabs = user && tabs.indexOf(top.v) > -1;
+  const tabItems = [['home', 'house', 'Home'], ['improve', 'target', 'Improve'], ['load', 'shield', 'Load'], ['you', 'user', 'You']];
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--chalk)', borderLeft: 'var(--border-hair)', borderRight: 'var(--border-hair)', position: 'relative', overflow: 'hidden', transform: 'translateZ(0)' }}>
+      {user && top.v !== 'capture' ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px 4px', flex: 'none' }}>
+          <span style={{ font: '600 13px/1 var(--font-ui)' }}>18:04</span>
+          <span style={{ display: 'flex', gap: 5, color: 'var(--ink)' }}><Icon name="signal" size={14} /><Icon name="wifi" size={14} /><Icon name="battery-full" size={16} /></span>
+        </div>
+      ) : null}
+      <div style={{ flex: 1, overflowY: top.v === 'capture' ? 'hidden' : 'auto', minHeight: 0 }}>{content}</div>
+      {toast ? <div style={{ position: 'absolute', left: 16, right: 16, bottom: showTabs ? 96 : 24, display: 'flex', justifyContent: 'center', zIndex: 60 }}><Toast tone="good" onDismiss={() => setToast(null)}>{toast}</Toast></div> : null}
+      {showTabs ? (
+        <div style={{ display: 'flex', alignItems: 'flex-end', borderTop: 'var(--border-hair)', background: 'var(--paper)', paddingBottom: 10, flex: 'none' }}>
+          {tabItems.slice(0, 2).map(([id, ic, lb]) => <TabBtn key={id} id={id} ic={ic} lb={lb} on={top.v === id} go={setTab} />)}
+          <div style={{ flex: 1.1, display: 'grid', justifyItems: 'center', gap: 3, paddingTop: 2 }}>
+            <button type="button" aria-label="Bowl" onClick={() => { setCaptureType('Net session'); push('capture'); }}
+              style={{ width: 58, height: 58, marginTop: -20, borderRadius: '50%', background: 'var(--cherry)', border: '4px solid var(--paper)', boxShadow: 'var(--shadow-1), 0 0 0 1px var(--line)', color: '#FFF', display: 'grid', placeContent: 'center', cursor: 'pointer' }}>
+              <Icon name="video" size={22} />
+            </button>
+            <span style={{ font: '600 10px/1 var(--font-ui)', letterSpacing: '.03em', color: 'var(--ink)' }}>Bowl</span>
+          </div>
+          {tabItems.slice(2).map(([id, ic, lb]) => <TabBtn key={id} id={id} ic={ic} lb={lb} on={top.v === id} go={setTab} />)}
+        </div>
+      ) : null}
+      {pay ? (
+        <div data-screen-label="S80 Paywall" style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'flex-end', zIndex: 100 }} onClick={() => setPay(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', background: 'var(--paper)', borderRadius: '12px 12px 0 0', padding: '20px 20px 26px', display: 'grid', gap: 12 }}>
+            <div style={{ font: '600 24px/1.1 var(--font-display)' }}>That's this month's three free analyses</div>
+            <div style={{ font: '400 13px/1.55 var(--font-ui)', color: 'var(--ink-2)' }}>Your speed log and the whole workload ledger stay free, always. Pro unlocks unlimited analysis, the full metric breakdown, retests and trends.</div>
+            <div style={{ border: 'var(--border-strong)', borderRadius: 'var(--radius-2)', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div><div style={{ font: '700 18px/1 var(--font-ui)' }}>£34.99 a year</div><div style={{ font: '400 12px/1 var(--font-mono)', color: 'var(--ink-3)', marginTop: 5 }}>£2.92 a month, billed once</div></div>
+              <Badge tone="good">Best value</Badge>
+            </div>
+            <div style={{ border: 'var(--border-hair)', borderRadius: 'var(--radius-2)', padding: '12px 16px', font: '500 14px/1 var(--font-ui)', color: 'var(--ink-2)' }}>£5.99 a month</div>
+            <Button size="lg" full onClick={() => { setPay(false); note('Pro on — prototype only, nothing was charged.'); }}>Go Pro — annual</Button>
+            <Button variant="ghost" full onClick={() => setPay(false)}>Not now</Button>
+            <div style={{ font: '400 10.5px/1.5 var(--font-mono)', color: 'var(--ink-3)', textAlign: 'center' }}>No countdown, no tricks. The price is the price.</div>
+          </div>
+        </div>
+      ) : null}
+      {share ? (
+        <div data-screen-label="S90 Share sheet" style={{ position: 'fixed', inset: 0, background: 'var(--overlay)', display: 'flex', alignItems: 'flex-end', zIndex: 100 }} onClick={() => setShare(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', background: 'var(--paper)', borderRadius: '12px 12px 0 0', padding: '20px 20px 26px', display: 'grid', gap: 12 }}>
+            <div style={{ font: '600 20px/1.1 var(--font-display)' }}>Share the retest</div>
+            <div style={{ position: 'relative', height: 120, background: 'var(--ink)', borderRadius: 'var(--radius-2)', display: 'grid', placeContent: 'center' }}>
+              <span style={{ font: '500 10px/1 var(--font-mono)', letterSpacing: '.12em', color: 'rgba(242,240,233,.8)' }}>BEFORE / AFTER CLIP · +2.8 KM/H</span>
+              <span style={{ position: 'absolute', right: 10, bottom: 8, font: '700 9px/1 var(--font-display)', letterSpacing: '.06em', color: 'rgba(242,240,233,.55)', textTransform: 'uppercase' }}>Sightscreen</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <Button variant="secondary" full icon="download" onClick={() => { setShare(false); note('Clip saved with watermark.'); }}>Save video</Button>
+              <Button variant="secondary" full icon="link" onClick={() => { setShare(false); note('Link copied.'); }}>Copy link</Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+function TabBtn({ id, ic, lb, on, go }) {
+  return (
+    <button type="button" onClick={() => go(id)} style={{ flex: 1, display: 'grid', justifyItems: 'center', gap: 3, padding: '9px 0 2px', background: 'none', border: 'none', cursor: 'pointer', color: on ? 'var(--ink)' : 'var(--ink-3)' }}>
+      <Icon name={ic} size={20} strokeWidth={on ? 2.25 : 2} />
+      <span style={{ font: `${on ? 600 : 500} 10px/1 var(--font-ui)`, letterSpacing: '.03em' }}>{lb}</span>
+    </button>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script></body></html>

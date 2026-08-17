@@ -1,0 +1,326 @@
+<!DOCTYPE html><html lang="en-GB"><head><meta charset="utf-8"><title>Sightscreen — developer handover</title>
+<link rel="stylesheet" href="../styles.css">
+<style>
+doc-page:not(:defined){visibility:hidden}
+doc-page{--doc-fg:var(--ink)}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;color:var(--ink);text-wrap:balance}
+h1{font-size:40px;line-height:1.05;letter-spacing:.005em;margin:0 0 6px}
+.sub{font-family:var(--font-mono);font-size:11.5px;line-height:1.7;color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase;margin:0 0 26px;padding-bottom:14px;border-bottom:1.5px solid var(--ink)}
+h2{font-size:24px;line-height:1.1;margin:30px 0 10px;padding-top:10px;border-top:1px solid var(--line)}
+h3{font-size:17px;line-height:1.2;margin:20px 0 6px;font-family:var(--font-ui);font-weight:700}
+h4{font-size:13px;line-height:1.2;margin:16px 0 5px;font-family:var(--font-ui);font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2)}
+p,li{font-family:var(--font-ui);font-size:14.5px;line-height:1.62;color:var(--ink);orphans:3;widows:3}
+p{margin:0 0 11px}
+ul,ol{margin:0 0 12px;padding-left:20px}
+li{margin-bottom:5px}
+strong{font-weight:600}
+code,.m{font-family:var(--font-mono);font-size:12.5px;background:var(--chalk);padding:1px 4px;border-radius:3px}
+table{width:100%;border-collapse:collapse;margin:8px 0 16px;break-inside:auto}
+th{font-family:var(--font-ui);font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);text-align:left;padding:7px 10px 7px 0;border-bottom:1.5px solid var(--ink);white-space:nowrap}
+td{font-family:var(--font-ui);font-size:13px;line-height:1.5;vertical-align:top;padding:7px 10px 7px 0;border-bottom:1px solid var(--line);break-inside:avoid}
+td:last-child,th:last-child{padding-right:0}
+td .m{font-size:11.5px;background:none;padding:0;color:var(--ink-2)}
+.callout{border:1.5px solid var(--ink);border-radius:8px;padding:14px 16px;margin:14px 0;break-inside:avoid;orphans:3;widows:3}
+.callout.warn{border-color:var(--cherry);background:var(--cherry-tint)}
+.callout.good{border-color:var(--turf);background:var(--turf-tint)}
+.callout h4{margin-top:0;color:inherit}
+.callout p:last-child{margin-bottom:0}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.tile{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:var(--paper);break-inside:avoid}
+.tile .k{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.tile .v{font-family:var(--font-ui);font-size:13.5px;line-height:1.45;margin-top:4px}
+.note{font-family:var(--font-mono);font-size:11px;line-height:1.6;color:var(--ink-3)}
+figure{margin:12px 0;break-inside:avoid}
+figcaption{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);margin-top:6px;letter-spacing:.03em;text-transform:uppercase}
+pre{font-family:var(--font-mono);font-size:11.5px;line-height:1.6;background:var(--chalk);border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin:10px 0;white-space:pre-wrap;break-inside:avoid}
+.hdr{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding-bottom:6px;border-bottom:1px solid var(--line)}
+.ftr{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding-top:6px;border-top:1px solid var(--line)}
+.appendix{break-before:page}
+</style>
+</head><body>
+<doc-page margin="0.8in">
+<div slot="header" class="hdr"><span>Sightscreen · developer handover</span><span>v1.0 · confidential</span></div>
+<div slot="footer" class="ftr">Sightscreen — build spec for iOS and Android · companion to screen-flow specification v0.1</div>
+
+<h1>Sightscreen — developer handover</h1>
+<p class="sub">Build specification for iOS and Android · 17 August 2026 · Companion to Screen Flow Specification v0.1 and the Sightscreen design system</p>
+
+<p>This document hands the Sightscreen prototype to engineering. It states what to build, to what values, in what order, and where the sources of truth live. It does not restate the product rationale — that sits in the screen-flow specification and the business case.</p>
+
+<h4>Sources of truth</h4>
+<table>
+<thead><tr><th>Artefact</th><th>Location</th><th>Authority</th></tr></thead>
+<tbody>
+<tr><td>Interactive prototype</td><td><span class="m">ui_kits/prototype/index.html</span></td><td>Behaviour, sequence, copy, state transitions</td></tr>
+<tr><td>Design tokens</td><td><span class="m">styles.css</span> → <span class="m">tokens/*.css</span></td><td>All colour, type, spacing, radius, motion values</td></tr>
+<tr><td>Component library</td><td><span class="m">components/&lt;group&gt;/</span></td><td>Props contracts (<span class="m">.d.ts</span>) and usage rules (<span class="m">.prompt.md</span>)</td></tr>
+<tr><td>Brand guide</td><td><span class="m">readme.md</span></td><td>Voice, visual foundations, iconography</td></tr>
+<tr><td>Flow spec</td><td><span class="m">uploads/screen-flow-specification.md</span></td><td>Screen inventory (S-IDs), error matrix, MVP scope line</td></tr>
+</tbody>
+</table>
+<p>Where the prototype and the flow spec disagree, the prototype wins on interaction detail and the spec wins on scope and intent. Where either disagrees with the design system on a numeric style value, the design system wins.</p>
+
+<h2>1. Platform and architecture</h2>
+
+<h3>Recommended stack</h3>
+<p><strong>React Native with Expo (bare workflow), TypeScript.</strong> One codebase for both platforms, with native modules where the camera and inference demand it. The prototype's screen decomposition maps one-to-one onto React Native screens, and the component library translates directly — every primitive is styled from flat tokens with no CSS features that lack a React Native equivalent.</p>
+<p>The bare workflow is required, not optional: 240 fps capture, thermal-state observation and on-device pose inference all need native code that Expo Go cannot host.</p>
+
+<h4>Native modules required</h4>
+<table>
+<thead><tr><th>Concern</th><th>iOS</th><th>Android</th></tr></thead>
+<tbody>
+<tr><td>High-frame-rate capture</td><td>AVFoundation — <span class="m">AVCaptureDevice.Format</span> selection at 240 fps, <span class="m">activeVideoMinFrameDuration</span> pinned</td><td>Camera2 / CameraX — <span class="m">CONSTRAINED_HIGH_SPEED_VIDEO</span> session, <span class="m">HIGH_SPEED_240</span> profile</td></tr>
+<tr><td>Pose inference</td><td>Core ML + Vision (<span class="m">VNDetectHumanBodyPoseRequest</span> or a bundled Core ML model)</td><td>TensorFlow Lite / MediaPipe Pose with NNAPI or GPU delegate</td></tr>
+<tr><td>Thermal state</td><td><span class="m">ProcessInfo.thermalState</span> + notification</td><td><span class="m">PowerManager.getCurrentThermalStatus()</span> + listener</td></tr>
+<tr><td>Screen-awake during capture</td><td><span class="m">UIApplication.isIdleTimerDisabled</span></td><td><span class="m">FLAG_KEEP_SCREEN_ON</span></td></tr>
+<tr><td>Audio cues</td><td>AVAudioEngine tone + AVSpeechSynthesizer, <span class="m">.playback</span> category, mixes with other audio</td><td>AudioTrack tone + TextToSpeech, <span class="m">USAGE_ASSISTANCE_ACCESSIBILITY</span></td></tr>
+<tr><td>Level / orientation checks</td><td>Core Motion device attitude</td><td>SensorManager — accelerometer + rotation vector</td></tr>
+<tr><td>Local persistence</td><td colspan="2">SQLite (WatermelonDB or expo-sqlite) for sessions, deliveries and workload; file system for clips</td></tr>
+</tbody>
+</table>
+
+<div class="callout">
+<h4>Offline-first is architectural, not a feature flag</h4>
+<p>Capture, inference, review and the workload ledger must all function fully in aeroplane mode. Treat the local SQLite database as the primary store and any server as a replica. There is no loading spinner anywhere in the core loop that waits on a network call — sync queues silently and never blocks a screen.</p>
+</div>
+
+<h3>Data model — minimum viable schema</h3>
+<pre>Bowler        id, dob, arm, type, heightCm, armSpanCm, targetSpeed, unit, guardianId?, consentState
+Session       id, bowlerId, type(net|match|drill), venueId?, startedAt, deviceModel,
+              captureFps, thermalEvents[], calibrationId, weighting
+Delivery      id, sessionId, index, speedKmh, speedBandKmh, confidence(ok|low),
+              clipPath, frameCount, events{bfc,ffc,release}, metrics{}
+Metric        deliveryId, key, value, bandValue, referenceLo, referenceHi
+Insight       sessionId, determinantKey, estimatedGainLo, estimatedGainHi, rationale, drillId
+WorkloadEntry id, bowlerId, date, deliveries, source(captured|manual), weighting
+Calibration   id, venueFingerprint(cameraPose hash), creasePoint, stumpBase, pitchLengthM
+Drill         id, name, determinantKey, cues[], prescription, expectedFeel, videoPath
+Retest        id, drillId, beforeDeliveryId, afterDeliveryId, metricDelta, speedDelta
+</pre>
+<p><span class="m">confidence</span> is never derived at read time — it is written once at inference and is immutable. Trend queries filter on it; delivery lists do not.</p>
+
+<h2>2. Screen inventory and build mapping</h2>
+<p>Every screen in the prototype, its S-ID, and the prototype file to read for behaviour. All prototype paths are under <span class="m">ui_kits/prototype/</span>.</p>
+
+<table>
+<thead><tr><th>S-ID</th><th>Screen</th><th>Prototype source</th><th>MVP</th></tr></thead>
+<tbody>
+<tr><td>S01–S07</td><td>Welcome, age gate, guardian consent, profile, goals, permission priming, setup tutorial</td><td><span class="m">ProtoOnboarding.jsx</span></td><td>In</td></tr>
+<tr><td>S10</td><td>Home / dashboard (order flips for under-18)</td><td><span class="m">ProtoHome.jsx</span></td><td>In</td></tr>
+<tr><td>S11</td><td>Session history</td><td><span class="m">ProtoHome.jsx</span> · <span class="m">view.v === 'history'</span></td><td>In</td></tr>
+<tr><td>S20–S26</td><td>Session type, placement checklist, calibration, ready, recording, ended, processing</td><td><span class="m">ProtoCapture.jsx</span></td><td>In</td></tr>
+<tr><td>S30–S33</td><td>Session review, delivery detail, metric explainer, the one insight</td><td><span class="m">ProtoReview.jsx</span></td><td>In</td></tr>
+<tr><td>S40–S43</td><td>Improve home, drill detail, retest comparison, drill library</td><td><span class="m">ProtoImprove.jsx</span></td><td>S40–S41 in; S42–S43 deferred</td></tr>
+<tr><td>S50–S52</td><td>Workload week, season, rest guidance</td><td><span class="m">ProtoLoad.jsx</span></td><td>S50 + S52 in; S51 deferred</td></tr>
+<tr><td>S60–S61</td><td>Pace trend, metric trends</td><td><span class="m">ProtoHome.jsx</span> · <span class="m">view.v === 'trends'</span></td><td>Deferred</td></tr>
+<tr><td>S70–S73</td><td>Profile, subscription, linked accounts, data and privacy</td><td><span class="m">ProtoYou.jsx</span></td><td>S70 + S73 in</td></tr>
+<tr><td>S80</td><td>Paywall (annual-first, no timer)</td><td><span class="m">index.html</span> · paywall sheet</td><td>Deferred (beta is free)</td></tr>
+<tr><td>S90</td><td>Share sheet, watermarked export</td><td><span class="m">index.html</span> · share sheet</td><td>Deferred</td></tr>
+</tbody>
+</table>
+
+<div class="callout warn">
+<h4>Non-negotiable in the MVP regardless of scope pressure</h4>
+<p>The age gate (S02), guardian consent (S03), the workload ledger (S50) and confidence flagging on every speed estimate. These four are the ethical floor. Retrofitting them later means retrofitting them onto real minors' data, which is both a compliance problem and a trust problem that does not recover.</p>
+</div>
+
+<h3>Navigation</h3>
+<p>Four tabs with an oversized centre capture action: Home · Improve · <strong>● Bowl</strong> · Load · You. Capture, onboarding, the paywall and delivery detail are modal contexts outside the tab bar — capture is a mode, not a place, and hides the bar entirely.</p>
+<p>Implement with React Navigation: a bottom tab navigator whose centre item is a custom oversized button dispatching to a modal stack, plus a root stack for the modal contexts. The prototype models this with a view stack (<span class="m">push</span> / <span class="m">pop</span> / <span class="m">setTab</span> in <span class="m">index.html</span>); its back semantics — a tab change clears the stack, a detail push preserves it — are the intended behaviour.</p>
+
+<h2>3. Design system implementation</h2>
+
+<h3>Tokens</h3>
+<p>Port <span class="m">tokens/*.css</span> to a single TypeScript token module. Do not re-derive values by eye from the prototype; read them from the CSS. Exact values, not rounded ones — where a value is 1.5px or 11px, it is not 2px or 12px.</p>
+
+<div class="tiles">
+<div class="tile"><div class="k">Surfaces</div><div class="v">App <span class="m">#F2F0E9</span> · cards <span class="m">#FFFFFF</span> · inverse <span class="m">#1C1B17</span></div></div>
+<div class="tile"><div class="k">Text</div><div class="v">Body <span class="m">#1C1B17</span> · secondary <span class="m">#4C4A42</span> · muted <span class="m">#7D786C</span></div></div>
+<div class="tile"><div class="k">Accent — use sparingly</div><div class="v">Cherry <span class="m">#B02A19</span>, hover <span class="m">#8C2013</span>. Record button, the one thing, over-limit, links. <strong>Primary buttons are ink, not cherry.</strong></div></div>
+<div class="tile"><div class="k">Status</div><div class="v">Good <span class="m">#2F6B3C</span> · watch <span class="m">#A56E00</span> · over <span class="m">#B02A19</span>, each with -soft and -tint variants</div></div>
+<div class="tile"><div class="k">Type</div><div class="v">Display Barlow Condensed 600–700 · UI Barlow 400–700 · data IBM Plex Mono</div></div>
+<div class="tile"><div class="k">Geometry</div><div class="v">Radius 4 controls / 8 cards / pill tags only · borders 1px hairline, 1.5px interactive</div></div>
+<div class="tile"><div class="k">Motion</div><div class="v">120 / 200 / 320 ms, <span class="m">cubic-bezier(.2,0,0,1)</span>. Fades and small translates. No bounce, spring or parallax.</div></div>
+<div class="tile"><div class="k">Elevation</div><div class="v">Flat by default — hairline borders do the separating. Shadows only on dialogs and toasts.</div></div>
+</div>
+
+<h4>Fonts</h4>
+<p>The prototype uses Google Fonts substitutes because no licensed brand binaries were supplied: <strong>Barlow Condensed</strong>, <strong>Barlow</strong>, <strong>IBM Plex Mono</strong> — all SIL Open Font License, so they ship in the app without a licence purchase. Bundle the static files with <span class="m">expo-font</span>; do not fetch webfonts at runtime. If brand fonts are licensed later, only the token module changes.</p>
+
+<h3>Component port</h3>
+<p>Nineteen primitives, all sourced from <span class="m">components/</span>. Read each <span class="m">.d.ts</span> for the props contract and each <span class="m">.prompt.md</span> for the usage rule; both are short and both are binding.</p>
+
+<table>
+<thead><tr><th>Group</th><th>Components</th><th>Port notes</th></tr></thead>
+<tbody>
+<tr><td>core</td><td>Button, IconButton, Badge, Tag, Card, Icon</td><td>Button hover states drop on touch; keep the 1px press translate as a pressed background step instead. <span class="m">Icon</span> becomes a Lucide React Native mapping — bundle the SVGs, do not fetch from CDN.</td></tr>
+<tr><td>forms</td><td>Input, Select, Checkbox, Radio, Switch</td><td><span class="m">Select</span> becomes a native picker sheet on both platforms; keep the caps label and hint/error line. Never require text entry on a capture screen.</td></tr>
+<tr><td>navigation</td><td>Tabs, SegmentedControl</td><td>Tabs are in-screen sectioning only; app-level navigation is the tab bar.</td></tr>
+<tr><td>feedback</td><td>Dialog, Toast, Tooltip</td><td>Tooltip has no touch equivalent — replace with a tap-to-expand inline definition or route to S32. Do not port hover.</td></tr>
+<tr><td>data</td><td>Metric, WorkloadMeter, CueCard</td><td>The signature three. <span class="m">Metric</span> is the only way a measured number reaches the screen; <span class="m">CueCard</span> is the only ink-inverse card and appears at most once per screen.</td></tr>
+</tbody>
+</table>
+
+<div class="callout good">
+<h4>Two invariants worth an automated test</h4>
+<p><strong>No bare measured number.</strong> Any measured value rendered without a <span class="m">band</span> prop on <span class="m">Metric</span> is a bug. Speeds show as <span class="m">128 ± 4 km/h</span>, never <span class="m">128.4 km/h</span>.</p>
+<p><strong>Sentence case, no emoji.</strong> Uppercase is reserved for small tracked eyebrow labels. No exclamation marks in product copy.</p>
+</div>
+
+<h2>4. Capture — the crux</h2>
+<p>Capture carries the expensive failure modes: a silent failure costs a bowler an entire spell they cannot re-bowl. Build this flow first and instrument it hardest.</p>
+
+<h3>S21 Placement checks</h3>
+<p>Four live validations, each with a plain-language fix, all overridable with the consequence stated:</p>
+<table>
+<thead><tr><th>Check</th><th>Signal</th><th>Failure copy</th></tr></thead>
+<tbody>
+<tr><td>Landscape orientation</td><td>Interface orientation</td><td>Turn the phone landscape — side-on to the pitch.</td></tr>
+<tr><td>Device level</td><td>Accelerometer, ±3° tolerance</td><td>Tilt it back to level, or speeds will read low.</td></tr>
+<tr><td>Crease and stumps visible</td><td>Calibration state for this venue</td><td>Mark them once — remembered for this venue.</td></tr>
+<tr><td>Light for 240 fps</td><td>Exposure duration / ISO ceiling</td><td>Too dark for slow motion. Move to better light or the speed reading will be unreliable.</td></tr>
+</tbody>
+</table>
+<p>An overridden check marks every delivery in that session <span class="m">confidence: low</span>. Overriding is allowed; hiding the consequence is not.</p>
+
+<h3>S22 Calibration</h3>
+<p>Two taps — popping crease line, then base of the stumps — resolved against known pitch geometry (22 yd pitch, 1.22 m crease) to produce the scale used for run-up and ball speed. Persist per venue keyed on a camera-pose fingerprint so a returning bowler at their home nets skips the step. Fallback when the stumps cannot be seen: manual pitch-length entry.</p>
+
+<h3>S24 Recording — the distance-legible screen</h3>
+<p>Read at 20 metres in sunlight. It carries a full-screen colour state, a delivery counter, and nothing else.</p>
+<table>
+<thead><tr><th>State</th><th>Colour</th><th>Meaning</th><th>Audio</th></tr></thead>
+<tbody>
+<tr><td>Armed / recording</td><td>Turf <span class="m">#2F6B3C</span>, full bleed</td><td>Recording, detection healthy</td><td>Soft tone per detected delivery; optional spoken speed</td></tr>
+<tr><td>Problem</td><td>Amber <span class="m">#A56E00</span>, full bleed</td><td>Out of frame · no detection for 90 s with motion · overheating · storage low</td><td>Distinct alert tone plus a spoken reason</td></tr>
+<tr><td>Stopped</td><td>Cherry <span class="m">#B02A19</span>, full bleed</td><td>Session ended</td><td>End tone</td></tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Counter type</strong> — the largest legible size the screen allows; the prototype uses ~190px display weight 700 at 390pt width. Scale with screen width, do not cap at a comfortable indoor size.</li>
+<li><strong>Contrast</strong> — specify against outdoor luminance, not the indoor 4.5:1 ratio. Full-brightness override for the duration of capture; screen never dims or sleeps.</li>
+<li><strong>Audio is the primary channel.</strong> It works when the screen does not — facing away, mid-follow-through, walking back to the mark. Every state change has a distinct sound; the whole session is operable by ear.</li>
+<li><strong>No controls.</strong> Ending is a tap anywhere, or automatic after five minutes without a detected delivery.</li>
+</ul>
+
+<h3>Thermal and power policy</h3>
+<p>Degrade, never stop. On a serious thermal state, drop the capture rate rather than ending the session, switch to amber, announce the trade-off aloud, and record the event on the session so review can explain the wider error bands honestly. Pre-flight on S23 gives a realistic capacity estimate from battery and thermal headroom ("Room for about 45 deliveries at 62% battery") and warns below 20%.</p>
+
+<h3>Error matrix</h3>
+<p>The full condition list is section 7 of the flow spec and is normative. Two rules govern all of it: <strong>failures are announced aloud at the moment they occur</strong>, and <strong>captured footage is never lost</strong> — interrupted processing resumes on relaunch.</p>
+
+<h2>5. Junior and guardian mode</h2>
+<p>Triggered by date of birth at S02, and structural rather than cosmetic. Gate on account age at the data layer, not in the view.</p>
+<table>
+<thead><tr><th>Element</th><th>Adult</th><th>Under 18</th></tr></thead>
+<tbody>
+<tr><td>Home surface</td><td>Pace trend first</td><td><strong>Workload status first</strong>, pace second</td></tr>
+<tr><td>Leaderboards, streaks, challenges</td><td>Available</td><td><strong>Absent.</strong> No mechanic that rewards bowling more, faster, or on consecutive days</td></tr>
+<tr><td>Personal-best push</td><td>Allowed</td><td>None</td></tr>
+<tr><td>Sharing and export</td><td>Full</td><td>Off by default; guardian-controlled</td></tr>
+<tr><td>Guardian view (S72)</td><td>n/a</td><td>Read-only workload, alerts on limit breaches, no video access by default</td></tr>
+<tr><td>Data retention</td><td>Standard</td><td>Minimised; on-device only unless the guardian opts in</td></tr>
+<tr><td>Mixed-action screening</td><td>Available</td><td>Surfaced proactively, with a recommendation to see a qualified coach or physiotherapist</td></tr>
+</tbody>
+</table>
+<p>While consent is pending the app stays in a restricted state: capture and workload work, sharing and any public surface do not. Consent is completed on the guardian's own device, never in the child's session.</p>
+
+<h4>Compliance to confirm before launch</h4>
+<p>UK Age Appropriate Design Code, GDPR Article 8 (and the applicable national age of digital consent, 13–16 by territory), COPPA if the US is in scope, and both app stores' kids/minors policies. Data minimisation for under-18 accounts is a design constraint already reflected above; verify the retention periods and the consent record-keeping with counsel.</p>
+
+<h2>6. Inference and measurement honesty</h2>
+<ul>
+<li><strong>On device, always.</strong> Video does not leave the phone in the MVP. This is the privacy position and the offline requirement in one decision.</li>
+<li><strong>Error bands are model output, not decoration.</strong> Every speed and every angle carries an uncertainty computed from frame count, calibration quality, light and pose confidence. Surface the band everywhere the value appears.</li>
+<li><strong>Confidence flagging is immutable and consequential.</strong> Low-confidence deliveries stay visible in lists, are excluded from trends, and never feed an insight.</li>
+<li><strong>Implausible values are flagged, not hidden.</strong> A speed outside the plausible range is marked low-confidence, dropped from trends, and shown alongside the raw video so the bowler can judge it themselves.</li>
+<li><strong>One insight per session.</strong> The determinant set is deliberately small — front knee at release, run-up speed, arm delay, trunk flexion. When two limiters are close, choose the safer and easier one and say why on S33.</li>
+<li><strong>Every metric explains itself.</strong> S32 carries what it is, why it links to speed, how it is measured here, the measurement's limitations, and the citation. The research summary is a product surface, not a footnote.</li>
+</ul>
+
+<div class="callout warn">
+<h4>Validation gate before any speed number ships</h4>
+<p>Speeds must be validated against radar over a range of light conditions, phone models and distances, and the published error band must be the measured one. The credibility risk here has already damaged a competitor; a band that flatters the model is worse than no number.</p>
+</div>
+
+<h2>7. Accessibility and field conditions</h2>
+<ul>
+<li><strong>Touch targets</strong> 60×60 pt minimum on anything used outdoors — above both platforms' guidance, because the user is standing, hot and hurried.</li>
+<li><strong>One-handed</strong> — all pre-capture controls in the lower two-thirds of the display; the other hand holds a ball.</li>
+<li><strong>Audio-first</strong> — the capture session is fully operable by ear, which serves the 20-metre problem and blind or low-vision users with the same mechanism.</li>
+<li><strong>Screen readers</strong> — every <span class="m">IconButton</span> ships its label; measured values announce as "116.2 plus or minus 2.3 kilometres per hour", not as raw glyphs.</li>
+<li><strong>Reduced motion</strong> honoured; no animation carries information alone. Colour is never the only signal — every capture state has an accompanying sound and word.</li>
+<li><strong>Dynamic type</strong> — support at least to the platform's large accessibility sizes on review and settings screens; the recording counter is already at maximum.</li>
+<li><strong>Units</strong> — km/h and mph selectable throughout; the UK market matters commercially and thinks in mph. Metric and imperial for height and span too.</li>
+</ul>
+
+<h2>8. Instrumentation</h2>
+<p>Emit exactly the events the Gate 2 questions need, and few others.</p>
+<table>
+<thead><tr><th>Question</th><th>Event chain</th><th>Target</th></tr></thead>
+<tbody>
+<tr><td>Does the aha land?</td><td><span class="m">onboarding_complete</span> → <span class="m">first_capture_started</span> → <span class="m">first_insight_viewed</span></td><td>&gt;60% within 7 days</td></tr>
+<tr><td>Does the loop close?</td><td><span class="m">insight_viewed</span> → <span class="m">drill_started</span> → <span class="m">retest_completed</span></td><td>The single most important funnel</td></tr>
+<tr><td>Where does capture fail?</td><td>State transitions across S21–S26 with failure reason</td><td>Diagnostic</td></tr>
+<tr><td>Is the speed metric credible?</td><td><span class="m">low_confidence_flagged</span> rate; radar deltas in beta</td><td>Diagnostic</td></tr>
+<tr><td>Does the paywall sit right?</td><td><span class="m">paywall_shown</span> by trigger, conversion by trigger</td><td>Post-beta</td></tr>
+<tr><td>Week-4 retention</td><td><span class="m">session_captured</span> cohorted by signup week</td><td>≥40% (Gate 2 pass)</td></tr>
+</tbody>
+</table>
+<p>Analytics respect the same minimisation rule as everything else: no video, no pose data, no identifiers beyond an install-scoped id off the device for under-18 accounts.</p>
+
+<h2>9. Commercial rules</h2>
+<ul>
+<li><strong>Free tier</strong> — three analysed sessions a month, the full speed log, the complete workload ledger. The ledger is never gated, on any tier, at any time.</li>
+<li><strong>Pro</strong> — unlimited analysis, full metric breakdown, retest comparisons, trends, drill library, export.</li>
+<li><strong>Paywall placement</strong> — the fourth analysed session of a calendar month; never inside first run, never before the loop has been completed once. Secondary triggers: a locked deep-metric view after the allocation is spent, and retest export.</li>
+<li><strong>Presentation</strong> — annual price first, monthly equivalent beneath, no countdown timer. Annual retention runs roughly 2.5× monthly, so push annual by making it obviously better value rather than by manufacturing urgency.</li>
+<li><strong>Store implementation</strong> — StoreKit 2 and Google Play Billing 6+, receipt validation server-side, entitlement cached locally so an offline user keeps what they paid for.</li>
+</ul>
+
+<h2>10. Build order</h2>
+<ol>
+<li><strong>Foundations</strong> — token module, font bundling, component port, navigation shell, SQLite schema. Nothing user-visible; everything downstream depends on it.</li>
+<li><strong>Capture spine</strong> — S20→S26 with real 240 fps capture, placement checks, calibration, the distance-legible recording screen and audio cues. Ship this to a field test before any analysis exists; if hands-free capture does not work at 20 metres, the product changes shape.</li>
+<li><strong>Inference and review</strong> — pose pipeline, speed with a validated band, confidence flagging, S30→S33. Radar validation gate sits here.</li>
+<li><strong>Safety</strong> — age gate, guardian consent, workload ledger with manual entry, rest guidance. Non-negotiable for the beta.</li>
+<li><strong>Improve loop</strong> — S40, S41 and a small hand-authored drill set, one per determinant.</li>
+<li><strong>Post-beta</strong> — trends, season view, retest comparison, drill library breadth, coach linking, sharing, paywall.</li>
+</ol>
+
+<h2>11. Open questions for the beta to answer</h2>
+<p>These are asserted by the specification and unproven. Instrument each one; do not design past them.</p>
+<ol>
+<li><strong>Is audio confirmation audible at 20 m</strong> in wind, with nets, other players and traffic? If not, the hands-free model needs a rethink — a paired watch is the leading alternative and would change the capture architecture.</li>
+<li><strong>Does two-point calibration survive a hurried user in bright sun,</strong> or does it need automatic crease detection to be usable?</li>
+<li><strong>What is the real thermal ceiling?</strong> If a phone sustains only 20 deliveries of 240 fps capture plus inference, the session model changes fundamentally — possibly to capture-now, process-overnight-on-charge.</li>
+<li><strong>Does the delivery counter alone satisfy mid-session curiosity,</strong> or do bowlers walk back and break the flow? Test with and without spoken speed.</li>
+<li><strong>Is one insight too austere?</strong> Test against a two-or-three variant, but resist the dashboard.</li>
+<li><strong>Does the drill-check session type get used?</strong> If the retest is skipped the loop does not close and the product is a speed gun with extra steps.</li>
+</ol>
+
+<h2 class="appendix">Appendix A — prototype file map</h2>
+<table>
+<thead><tr><th>File</th><th>Contains</th></tr></thead>
+<tbody>
+<tr><td><span class="m">index.html</span></td><td>App shell: view stack, tab bar with centre capture action, status bar, toast host, paywall sheet (S80), share sheet (S90), seed data, unit conversion, audio helpers</td></tr>
+<tr><td><span class="m">ProtoOnboarding.jsx</span></td><td>S01–S07, including the age-gate branch that switches the whole app to junior mode</td></tr>
+<tr><td><span class="m">ProtoCapture.jsx</span></td><td>S20–S26: session type, placement checks, two-tap calibration, arm screen, countdown, distance-legible recording with tone and amber alert, session-ended summary, processing</td></tr>
+<tr><td><span class="m">ProtoReview.jsx</span></td><td>S30–S33: review, delivery detail with event scrubber, metric explainer, the one insight</td></tr>
+<tr><td><span class="m">ProtoImprove.jsx</span></td><td>S40–S43 and the four-drill authored set with cues, prescription and expected feel</td></tr>
+<tr><td><span class="m">ProtoLoad.jsx</span></td><td>S50–S52: week view, season view with ramp flag, rest guidance</td></tr>
+<tr><td><span class="m">ProtoHome.jsx</span></td><td>S10, S11, S60, S61 — including the junior-mode card reorder</td></tr>
+<tr><td><span class="m">ProtoYou.jsx</span></td><td>S70–S73: profile, subscription, linked accounts, data and privacy with delete-everything confirm</td></tr>
+<tr><td><span class="m">README.md</span></td><td>Walk-through script, coverage table, and the list of prototype fakes</td></tr>
+</tbody>
+</table>
+
+<h4>Known prototype fakes — do not port</h4>
+<p>The countdown is shortened to five seconds regardless of setting; deliveries arrive on a 3.8-second timer; speeds are synthesised; video areas are flat ink blocks with no footage; calibration persists for the session only; the amber alert fires on a fixed 13-second timer to demonstrate the state. Workload guideline figures (7 overs a spell, 21 a week) are illustrative placeholders — replace with the real Cricket Australia 1-3-5 / 2-4-6 and ECB territory equivalents, sourced and dated, before any user sees them.</p>
+
+<h4>Gaps to resolve with the brand owner</h4>
+<p>No logo exists — the wordmark is set in type wherever a mark would go. Brand fonts are open-licence substitutes. There is no illustration library, no drill footage and no marketing surface. None of these block the build; all of them block a launch.</p>
+</doc-page>
+<script src="./doc-page.js"></script>
+</body></html>

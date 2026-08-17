@@ -1,0 +1,19 @@
+:root{
+/* Base — named for the ground: chalk screen, ink scoreboard, leather ball, turf */
+--chalk:#F2F0E9; --paper:#FFFFFF;
+--ink:#1C1B17; --ink-deep:#0D0C0A; --ink-2:#4C4A42; --ink-3:#7D786C;
+--line:#DED9CC; --line-strong:#C6C0AF;
+--cherry:#B02A19; --cherry-deep:#8C2013; --cherry-tint:#F7E9E4; --cherry-soft:#E9836F;
+--turf:#2F6B3C; --turf-deep:#24522E; --turf-tint:#E7EFE4; --turf-soft:#9CCB9F;
+--amber:#A56E00; --amber-deep:#7F5500; --amber-tint:#F6EED9; --amber-soft:#E4B95C;
+/* Semantic aliases */
+--surface-app:var(--chalk); --surface-card:var(--paper); --surface-inverse:var(--ink);
+--text-body:var(--ink); --text-secondary:var(--ink-2); --text-muted:var(--ink-3);
+--text-inverse:var(--chalk); --text-inverse-muted:rgba(242,240,233,.72);
+--accent:var(--cherry); --accent-hover:var(--cherry-deep);
+--good:var(--turf); --good-bg:var(--turf-tint);
+--watch:var(--amber); --watch-bg:var(--amber-tint);
+--over:var(--cherry); --over-bg:var(--cherry-tint);
+--band-track:#EAE6DA; --band-fill:var(--ink);
+--overlay:rgba(28,27,23,.55);
+}

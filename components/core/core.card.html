@@ -1,0 +1,38 @@
+<!-- @dsCard group="Components" viewport="700x350" name="Core" subtitle="Button, icon button, badge, tag, card" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<style>body{margin:0;padding:16px;background:var(--chalk)}</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="../../_ds_bundle.js"></script>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { Button, IconButton, Badge, Tag, Card, Metric } = window.SightscreenDesignSystem_9d8748;
+const Row = ({ children, s }) => <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', ...s }}>{children}</div>;
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <div style={{ display: 'grid', gap: 14 }}>
+    <Row>
+      <Button>Record a spell</Button><Button variant="secondary">Not now</Button><Button variant="ghost">Skip</Button>
+      <Button variant="danger">Delete session</Button><Button disabled>Processing</Button>
+    </Row>
+    <Row>
+      <Button size="sm" icon="video">Record</Button><Button size="lg" icon="video">Record a spell</Button>
+      <IconButton name="settings" label="Settings" /><IconButton name="share-2" label="Share" variant="secondary" /><IconButton name="plus" label="Add" variant="primary" />
+    </Row>
+    <Row>
+      <Badge>U17</Badge><Badge tone="good">Within limit</Badge><Badge tone="watch">Near limit</Badge><Badge tone="over">Over limit</Badge><Badge tone="inverse">PB</Badge>
+      <span style={{ width: 8 }}></span>
+      <Tag>This season</Tag><Tag selected>Outswing</Tag><Tag onRemove={() => {}}>Short run-up</Tag>
+    </Row>
+    <Row s={{ alignItems: 'stretch' }}>
+      <Card title="Tuesday's net" action={<Badge tone="good">14 balls</Badge>} style={{ flex: 1, minWidth: 220 }}>
+        <Metric label="Fastest" value="112.4" unit="km/h" band={2.6} size="sm" />
+      </Card>
+      <Card raised title="Raised card" style={{ flex: 1, minWidth: 220 }}>
+        <div style={{ font: '400 13px/1.5 var(--font-ui)', color: 'var(--ink-2)' }}>Only elevation level cards may use.</div>
+      </Card>
+    </Row>
+  </div>
+);
+</script></body></html>
