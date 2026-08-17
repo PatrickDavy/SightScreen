@@ -7,7 +7,7 @@
  * through one at a time.
  */
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Text } from 'react-native';
 
 import { useRepoQuery } from '@/app/ReposProvider';
@@ -16,6 +16,7 @@ import { DETERMINANTS } from '@/domain/content/determinants';
 import { cueFor, gainLabel } from '@/domain/insight';
 import type { HomeStackParamList } from '@/navigation/types';
 import { color, font, leading, text } from '@/theme/tokens';
+import { track } from '@/services/analytics';
 import { MonoNote } from '@/ui/MonoNote';
 import { Screen } from '@/ui/Screen';
 import { ScreenHeader } from '@/ui/ScreenHeader';
@@ -29,6 +30,10 @@ export function InsightScreen({ navigation, route }: Props) {
   const okDeliveries = useRepoQuery(
     (r) => r.deliveries.listForSession(sessionId).filter((d) => d.confidence === 'ok').length,
   );
+
+  useEffect(() => {
+    if (insight) track('insight_viewed', { determinant: insight.determinantKey });
+  }, [insight]);
 
   if (!insight) {
     return (
@@ -51,12 +56,14 @@ export function InsightScreen({ navigation, route }: Props) {
           size="lg"
           full
           icon="play"
-          onPress={() =>
+          onPress={() => {
+            track('drill_started', { drillId: insight.drillId });
+            // A sibling tab, so this is the tab navigator rather than the root.
             navigation.getParent()?.navigate('ImproveTab', {
               screen: 'Drill',
               params: { drillId: insight.drillId },
-            })
-          }
+            });
+          }}
         >
           Start the drill
         </Button>

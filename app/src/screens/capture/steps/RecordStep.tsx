@@ -13,6 +13,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, useWindowDimensions } from 'react-native';
 
 import { color, dur, ease, font, leading } from '@/theme/tokens';
+import { useReducedMotion } from '@/ui/useReducedMotion';
 
 import { CaptureProblem } from '../captureMachine';
 
@@ -30,6 +31,7 @@ export interface RecordStepProps {
 export function RecordStep({ count, problem, onEnd }: RecordStepProps) {
   const { width } = useWindowDimensions();
   const counterSize = Math.round(width * COUNTER_RATIO);
+  const reducedMotion = useReducedMotion();
 
   // Turf while healthy, amber on a problem. Animated so the change reads as a
   // change from the corner of an eye, without carrying information by motion
@@ -38,11 +40,13 @@ export function RecordStep({ count, problem, onEnd }: RecordStepProps) {
   useEffect(() => {
     Animated.timing(tone, {
       toValue: problem ? 1 : 0,
-      duration: dur.d2,
+      // Snap rather than fade when motion is reduced. Nothing is lost: the
+      // state is also a word on the screen and a sound in the air.
+      duration: reducedMotion ? 0 : dur.d2,
       easing: ease.swift,
       useNativeDriver: false,
     }).start();
-  }, [problem, tone]);
+  }, [problem, tone, reducedMotion]);
 
   const background = tone.interpolate({
     inputRange: [0, 1],

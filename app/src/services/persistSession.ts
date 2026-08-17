@@ -22,6 +22,8 @@ import { selectInsight } from '@/domain/insight';
 import { Insight, MetricRow, Session, SessionType } from '@/domain/types';
 import { WEIGHTING } from '@/domain/workload';
 
+import { track } from './analytics';
+
 /** Where the crash-resume payload for a session lives in `settings`. */
 export const pendingKey = (sessionId: string) => `pending:${sessionId}`;
 
@@ -213,6 +215,16 @@ export async function processSession(
       observation.speedKmh,
       session.lowConfOverride,
     );
+
+    if (confidence === 'low') {
+      // Diagnostic: the rate of this is how the beta judges whether the speed
+      // metric is credible at all.
+      track('low_confidence_flagged', {
+        sessionId,
+        overridden: session.lowConfOverride,
+        speedKmh: observation.speedKmh,
+      });
+    }
 
     repos.deliveries.insert({
       id: deliveryId,

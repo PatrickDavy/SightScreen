@@ -27,6 +27,7 @@ import {
   processSession,
   startSession,
 } from '@/services/persistSession';
+import { track } from '@/services/analytics';
 import { useAppStore } from '@/store/useAppStore';
 import { color } from '@/theme/tokens';
 import { CaptureBar } from '@/ui/CaptureBar';
@@ -216,6 +217,7 @@ export function CaptureScreen({ navigation, route }: Props) {
         simulated,
       }),
     );
+    track('first_capture_started', { sessionType: state.sessionType });
     dispatch({ type: 'arm', sessionId: session.id, captureFps: maxFps });
   }, [bowler, mutate, state.sessionType, state.taps, state.overrodeChecks, maxFps, simulated]);
 
@@ -279,6 +281,10 @@ export function CaptureScreen({ navigation, route }: Props) {
         setEntitlement(next);
       }
 
+      track('session_captured', {
+        deliveries: result.deliveriesAnalysed,
+        simulated: capabilities.capture.kind === 'simulated',
+      });
       if (state.audioEnabled) capabilities.audio.play('done');
       useAppStore.getState().bumpData();
       showToast(`Processed. ${result.deliveriesAnalysed} deliveries analysed.`, 'good');
@@ -318,6 +324,10 @@ export function CaptureScreen({ navigation, route }: Props) {
       overrodeChecks: session.lowConfOverride,
     });
   }, [resumeId, repos]);
+
+  useEffect(() => {
+    track('capture_state_changed', { step: state.step, problem: state.problem?.reason ?? null });
+  }, [state.step, state.problem]);
 
   /* ---------- render ---------- */
 

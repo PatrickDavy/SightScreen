@@ -21,6 +21,7 @@ import { newId } from '@/domain/ids';
 import { isJunior, juniorPolicy } from '@/domain/juniorPolicy';
 import { Arm, Bowler, BowlingType } from '@/domain/types';
 import type { RootStackParamList } from '@/navigation/types';
+import { track } from '@/services/analytics';
 import { useAppStore } from '@/store/useAppStore';
 import { color, font, leading, sp, text } from '@/theme/tokens';
 import { MediaPlaceholder } from '@/ui/MediaPlaceholder';
@@ -82,6 +83,7 @@ export function OnboardingScreen({ navigation }: Props) {
       consentState: junior ? (consentSent ? 'pending' : 'none') : 'none',
     };
     mutate((r) => r.bowler.save(bowler));
+    track('onboarding_complete', { junior, consent: bowler.consentState });
 
     const policy = juniorPolicy(bowler.yob, bowler.consentState, nowYear);
     navigation.dispatch(
