@@ -47,7 +47,7 @@ describe('workload', () => {
   });
 
   it('derives the plain status words against the guideline', () => {
-    const g = guidelineFor(2009, 2026); // U17, 21 overs/week
+    const g = guidelineFor(2010, 2026); // age 16 — U17, 21 overs/week
     expect(STATUS_WORD[loadStatus(10, g)]).toBe('Good to bowl');
     expect(STATUS_WORD[loadStatus(17, g)]).toBe('Bowl light');
     expect(STATUS_WORD[loadStatus(21, g)]).toBe('Rest today');
