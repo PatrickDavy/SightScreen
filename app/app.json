@@ -12,11 +12,13 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.sightscreen.app",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": ["audio"],
+        "NSCameraUsageDescription": "Sightscreen films your bowling from the tripod to measure ball speed. Video stays on this phone."
       }
     },
     "android": {
       "package": "com.sightscreen.app",
+      "permissions": ["android.permission.CAMERA"],
       "adaptiveIcon": {
         "backgroundColor": "#F2F0E9",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -39,13 +41,6 @@
           "backgroundColor": "#F2F0E9",
           "image": "./assets/splash-icon.png",
           "imageWidth": 200
-        }
-      ],
-      [
-        "react-native-vision-camera",
-        {
-          "cameraPermissionText": "Sightscreen films your bowling from the tripod to measure ball speed. Video stays on this phone.",
-          "enableMicrophonePermission": false
         }
       ],
       [
