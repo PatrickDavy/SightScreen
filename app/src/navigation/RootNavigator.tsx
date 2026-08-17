@@ -7,6 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import { CaptureScreen } from '@/screens/capture/CaptureScreen';
+import { OnboardingScreen } from '@/screens/onboarding/OnboardingScreen';
 import { Placeholder } from '@/screens/Placeholder';
 
 import { TabNavigator } from './TabNavigator';
@@ -31,9 +32,7 @@ export function RootNavigator({ initialRoute, initialTab }: RootNavigatorProps) 
           animation: 'fade',
         }}
       >
-        <Root.Screen name="Onboarding">
-          {() => <Placeholder title="Welcome" screenId="S01" />}
-        </Root.Screen>
+        <Root.Screen name="Onboarding" component={OnboardingScreen} />
         <Root.Screen name="Capture" component={CaptureScreen} />
       </Root.Group>
     </Root.Navigator>

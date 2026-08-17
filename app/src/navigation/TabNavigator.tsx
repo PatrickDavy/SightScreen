@@ -12,11 +12,15 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import { Icon, type IconName } from '@/components';
+import { LoadScreen } from '@/screens/load/LoadScreen';
+import { RestScreen } from '@/screens/load/RestScreen';
 import { Placeholder } from '@/screens/Placeholder';
 import { DeliveryScreen } from '@/screens/review/DeliveryScreen';
 import { ExplainerScreen } from '@/screens/review/ExplainerScreen';
 import { InsightScreen } from '@/screens/review/InsightScreen';
 import { ReviewScreen } from '@/screens/review/ReviewScreen';
+import { PrivacyScreen } from '@/screens/you/PrivacyScreen';
+import { YouScreen } from '@/screens/you/YouScreen';
 import { color, font, sp } from '@/theme/tokens';
 
 import { BowlButton } from './BowlButton';
@@ -63,9 +67,8 @@ function ImproveStackScreen() {
 function LoadStackScreen() {
   return (
     <LoadStack.Navigator screenOptions={stackOptions}>
-      <LoadStack.Screen name="Load">
-        {() => <Placeholder title="Load" screenId="S50" />}
-      </LoadStack.Screen>
+      <LoadStack.Screen name="Load" component={LoadScreen} />
+      <LoadStack.Screen name="Rest" component={RestScreen} />
     </LoadStack.Navigator>
   );
 }
@@ -73,9 +76,8 @@ function LoadStackScreen() {
 function YouStackScreen() {
   return (
     <YouStack.Navigator screenOptions={stackOptions}>
-      <YouStack.Screen name="You">
-        {() => <Placeholder title="You" screenId="S70" />}
-      </YouStack.Screen>
+      <YouStack.Screen name="You" component={YouScreen} />
+      <YouStack.Screen name="Privacy" component={PrivacyScreen} />
     </YouStack.Navigator>
   );
 }

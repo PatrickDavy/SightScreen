@@ -37,6 +37,22 @@ export function resetAppStore() {
   useAppStore.setState({ dataVersion: 0, toasts: [], entitlement: null });
 }
 
+/**
+ * The previous render, so it can be torn down before the next one.
+ *
+ * This matters more than it looks. A tree left mounted with an unflushed update
+ * — a text input that was typed into, say — stops the *next* root committing at
+ * all, and the following test then fails on an empty tree with no hint as to
+ * why. Unmounting explicitly here is more reliable than depending on the
+ * library's automatic teardown, which does not appear to run under this preset.
+ */
+let previous: { unmount: () => void } | null = null;
+
+afterEach(() => {
+  previous?.unmount();
+  previous = null;
+});
+
 export async function renderScreen(ui: React.ReactElement, options: RenderOptions = {}) {
   resetAppStore();
 
@@ -59,5 +75,6 @@ export async function renderScreen(ui: React.ReactElement, options: RenderOption
   );
 
   const result = await render(body);
+  previous = result;
   return { ...result, repos, capabilities };
 }

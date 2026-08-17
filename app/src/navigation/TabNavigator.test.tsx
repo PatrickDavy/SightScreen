@@ -25,12 +25,12 @@ describe('navigation shell', () => {
   it('lands an under-18 account on the workload surface', async () => {
     await renderScreen(<RootNavigator initialRoute="Tabs" initialTab="LoadTab" />);
     // Safety is structure: for a junior, workload is the default surface.
-    expect(screen.getByTestId('placeholder-S50')).toBeTruthy();
+    expect(screen.getByTestId('load-screen')).toBeTruthy();
   });
 
   it('starts a first run in onboarding, with no tab bar', async () => {
     await renderScreen(<RootNavigator initialRoute="Onboarding" initialTab="HomeTab" />);
-    expect(screen.getByTestId('placeholder-S01')).toBeTruthy();
+    expect(screen.getByText('Get started')).toBeTruthy();
     expect(screen.queryByLabelText('Bowl a session')).toBeNull();
   });
 });
