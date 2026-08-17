@@ -105,6 +105,26 @@ describe('calibration', () => {
     expect(hasUsableCalibration(two)).toBe(true);
   });
 
+  it('is not usable when both marks land on the same point', () => {
+    // No separation means no scale, and no scale means no speed.
+    const state = run([
+      { type: 'addTap', tap: { x: 0.5, y: 0.5 } },
+      { type: 'addTap', tap: { x: 0.5, y: 0.5 } },
+    ]);
+    expect(state.taps).toHaveLength(2);
+    expect(hasUsableCalibration(state)).toBe(false);
+  });
+
+  it('is not usable when a tap never resolved to a coordinate', () => {
+    // react-native-web leaves locationX/Y undefined, which used to divide into
+    // NaN and store a meaningless calibration behind an enabled button.
+    const state = run([
+      { type: 'addTap', tap: { x: Number.NaN, y: Number.NaN } },
+      { type: 'addTap', tap: { x: 0.5, y: 0.4 } },
+    ]);
+    expect(hasUsableCalibration(state)).toBe(false);
+  });
+
   it('clears the taps when calibration is restarted', () => {
     const state = run([
       { type: 'addTap', tap: { x: 0.2, y: 0.8 } },

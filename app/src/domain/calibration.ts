@@ -22,9 +22,24 @@ export interface SceneScale {
   metresPerUnit: number;
 }
 
-/** Derive the scene scale from the two taps. Degenerate taps (same point)
- *  return null — block continue and ask again. */
+/**
+ * Derive the scene scale from the two taps. Degenerate taps (the same point)
+ * return null — block continue and ask again.
+ *
+ * Non-finite coordinates return null too. A NaN would otherwise pass the
+ * distance check (`NaN < 0.01` is false) and yield a NaN scale, which is worse
+ * than no scale: it looks like a calibrated venue and silently poisons every
+ * speed derived from it.
+ */
 export function sceneScale(crease: Tap, stumps: Tap): SceneScale | null {
+  if (
+    !Number.isFinite(crease.x) ||
+    !Number.isFinite(crease.y) ||
+    !Number.isFinite(stumps.x) ||
+    !Number.isFinite(stumps.y)
+  ) {
+    return null;
+  }
   const dx = stumps.x - crease.x;
   const dy = stumps.y - crease.y;
   const dist = Math.sqrt(dx * dx + dy * dy);

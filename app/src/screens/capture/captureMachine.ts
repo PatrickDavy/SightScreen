@@ -10,7 +10,7 @@
  *            ↳──────────────↗ (venue already calibrated, or overridden)
  *                                        ended → ready (nothing detected)
  */
-import { Tap } from '@/domain/calibration';
+import { Tap, sceneScale } from '@/domain/calibration';
 import { SessionType } from '@/domain/types';
 
 import { DeliveryObservation, ProblemReason } from '@/capabilities/types';
@@ -225,9 +225,17 @@ export function captureReducer(state: CaptureState, action: CaptureAction): Capt
 
 /* ---------- selectors: derived, never stored ---------- */
 
-/** Whether S22's Continue is available: two taps that are not the same point. */
+/**
+ * Whether S22's Continue is available.
+ *
+ * Two taps are not enough: they have to resolve to a scene scale. Two taps on
+ * the same point, or coordinates that never resolved, give no scale — and a
+ * session without one cannot produce a speed at all.
+ */
 export function hasUsableCalibration(state: CaptureState): boolean {
-  return state.taps.length === 2;
+  const [crease, stumps] = state.taps;
+  if (!crease || !stumps) return false;
+  return sceneScale(crease, stumps) !== null;
 }
 
 export function deliveryCount(state: CaptureState): number {

@@ -3,8 +3,14 @@
  * against known pitch geometry (22 yd, 1.22 m crease) to scale the scene.
  * Remembered per venue, so a returning bowler skips this.
  */
-import React, { useState } from 'react';
-import { LayoutChangeEvent, Pressable, Text, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+  GestureResponderEvent,
+  LayoutChangeEvent,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
 
 import { Button, Input } from '@/components';
 import { Tap } from '@/domain/calibration';
@@ -41,10 +47,37 @@ export function CalibStep({
   const [size, setSize] = useState({ width: 0, height: PREVIEW_HEIGHT });
   const [manual, setManual] = useState('');
   const [showManual, setShowManual] = useState(false);
+  const targetRef = useRef<View>(null);
 
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
     setSize({ width, height });
+  };
+
+  const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+
+  /**
+   * Where in the frame the bowler tapped, normalised to 0..1.
+   *
+   * React Native gives coordinates relative to the element in `locationX/Y`,
+   * but react-native-web leaves those undefined and only offers page
+   * coordinates. Dividing the undefined value produced NaN, which silently
+   * stored a meaningless calibration — and the scene scale it feeds sets every
+   * speed in the session, so this has to be right on both platforms.
+   */
+  const handleTap = (e: GestureResponderEvent) => {
+    if (taps.length >= 2) return;
+    const { locationX, locationY, pageX, pageY } = e.nativeEvent;
+
+    if (Number.isFinite(locationX) && Number.isFinite(locationY) && size.width > 0) {
+      onTap({ x: clamp01(locationX / size.width), y: clamp01(locationY / size.height) });
+      return;
+    }
+
+    targetRef.current?.measureInWindow((left, top, width, height) => {
+      if (!width || !height) return;
+      onTap({ x: clamp01((pageX - left) / width), y: clamp01((pageY - top) / height) });
+    });
   };
 
   const crease = taps[0];
@@ -54,18 +87,12 @@ export function CalibStep({
     <View style={{ flex: 1 }}>
       <View style={{ flex: 1, paddingHorizontal: sp[4], paddingTop: sp[4], gap: sp[3] }}>
         <Pressable
+          ref={targetRef}
           onLayout={onLayout}
           accessibilityRole="button"
           accessibilityLabel={CAPTIONS[Math.min(taps.length, 2)]}
           testID="calibration-target"
-          onPress={(e) => {
-            if (taps.length >= 2 || size.width === 0) return;
-            const { locationX, locationY } = e.nativeEvent;
-            onTap({
-              x: Math.min(1, Math.max(0, locationX / size.width)),
-              y: Math.min(1, Math.max(0, locationY / size.height)),
-            });
-          }}
+          onPress={handleTap}
           style={{
             height: PREVIEW_HEIGHT,
             backgroundColor: color.surfaceInverse,
