@@ -4,7 +4,7 @@
  *  any server would be a replica. */
 import { SqlAdapter } from './adapter';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 const TABLES = [
   `CREATE TABLE IF NOT EXISTS bowler (
@@ -35,7 +35,8 @@ const TABLES = [
     status TEXT NOT NULL CHECK(status IN ('armed','recording','ended','processing','complete','abandoned')),
     processed_count INTEGER NOT NULL DEFAULT 0,
     low_conf_override INTEGER NOT NULL DEFAULT 0,
-    clip_path TEXT
+    clip_path TEXT,
+    simulated INTEGER NOT NULL DEFAULT 0
   )`,
   `CREATE TABLE IF NOT EXISTS delivery (
     id TEXT PRIMARY KEY,
@@ -105,10 +106,29 @@ const TABLES = [
   `CREATE INDEX IF NOT EXISTS idx_session_status ON session(status)`,
 ];
 
+/** True when `table` already has `column`. Cheaper than parsing the version. */
+function hasColumn(db: SqlAdapter, table: string, column: string): boolean {
+  try {
+    return db
+      .all<{ name: string }>(`PRAGMA table_info(${table})`)
+      .some((row) => row.name === column);
+  } catch {
+    // The table does not exist yet; the CREATE above will include the column.
+    return true;
+  }
+}
+
 export function migrate(db: SqlAdapter): void {
   db.transaction(() => {
     for (const sql of TABLES) db.run(sql);
-    db.run(`INSERT OR IGNORE INTO settings(key, value) VALUES ('schema_version', ?)`, [
+
+    // v1 → v2: session.simulated. Written as an idempotent column check rather
+    // than a version comparison so it converges from any prior state.
+    if (!hasColumn(db, 'session', 'simulated')) {
+      db.run(`ALTER TABLE session ADD COLUMN simulated INTEGER NOT NULL DEFAULT 0`);
+    }
+
+    db.run(`INSERT OR REPLACE INTO settings(key, value) VALUES ('schema_version', ?)`, [
       String(SCHEMA_VERSION),
     ]);
   });

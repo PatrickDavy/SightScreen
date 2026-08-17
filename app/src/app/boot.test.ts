@@ -39,6 +39,7 @@ const session = (id: string, status: Session['status']): Session => ({
   processedCount: 0,
   lowConfOverride: false,
   clipPath: null,
+  simulated: true,
 });
 
 function repos(): Repos {

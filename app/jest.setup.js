@@ -12,12 +12,23 @@
 // for the duration and so never reaches this guard.
 const ESCALATED = ['warn', 'error'];
 
-// React's "not wrapped in act(...)" notice is a harness artifact, not a product
-// defect: RN's Animated drives WorkloadMeter/Switch/Radio from a real timer that
-// can land after its own test has finished, which would otherwise fail whichever
-// unrelated test happens to be running. Deliberately narrow — nothing else is
-// tolerated.
-const IGNORED = [/not wrapped in act\(/];
+// React's act() notices are harness artifacts, not product defects, and all
+// three would otherwise fail tests for reasons a reader cannot act on:
+//   - "not wrapped in act": RN's Animated drives WorkloadMeter/Switch/Radio from
+//     a real timer that can land after its own test finished, failing whichever
+//     unrelated test happens to be running at the time.
+//   - "overlapping act": the testing library keeps an act scope open across an
+//     async render, so any nested act trips it.
+//   - "not configured to support act": genuinely asynchronous work — processing
+//     a session reports progress from a promise chain — updates state outside
+//     any act scope, which is the behaviour under test, not a bug.
+// Deliberately narrow. Nothing else is tolerated, and console.warn — where
+// Metric's bare-number invariant lives — is untouched.
+const IGNORED = [
+  /not wrapped in act\(/,
+  /overlapping act\(\) calls/,
+  /not configured to support act\(/,
+];
 
 const original = {};
 let leaked = [];

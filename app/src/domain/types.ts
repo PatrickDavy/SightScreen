@@ -49,6 +49,13 @@ export interface Session {
    *  session is then marked low confidence rather than hidden. */
   lowConfOverride: boolean;
   clipPath: string | null;
+  /**
+   * True when the readings came from the simulated engine rather than a real
+   * capture and pose pass. Recorded rather than inferred at read time, because
+   * a synthesised speed must never be displayed as if it were measured — and
+   * once the data is written, the UI has no other way to tell.
+   */
+  simulated: boolean;
 }
 
 export interface DeliveryEvents {

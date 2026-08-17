@@ -56,6 +56,7 @@ function rowToSession(r: Row): Session {
     processedCount: num(r.processed_count),
     lowConfOverride: num(r.low_conf_override) === 1,
     clipPath: strOrNull(r.clip_path),
+    simulated: num(r.simulated) === 1,
   };
 }
 
@@ -101,6 +102,7 @@ const SESSION_FIELD_MAP: Record<string, string> = {
   processedCount: 'processed_count',
   lowConfOverride: 'low_conf_override',
   clipPath: 'clip_path',
+  simulated: 'simulated',
 };
 
 export function createSqlRepos(db: SqlAdapter): Repos {
@@ -172,8 +174,9 @@ export function createSqlRepos(db: SqlAdapter): Repos {
         db.run(
           `INSERT INTO session
            (id, bowler_id, type, venue_id, started_at, ended_at, device_model, capture_fps,
-            thermal_events, calibration_id, weighting, status, processed_count, low_conf_override, clip_path)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            thermal_events, calibration_id, weighting, status, processed_count, low_conf_override,
+            clip_path, simulated)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
           [
             s.id,
             s.bowlerId,
@@ -190,6 +193,7 @@ export function createSqlRepos(db: SqlAdapter): Repos {
             s.processedCount,
             s.lowConfOverride ? 1 : 0,
             s.clipPath,
+            s.simulated ? 1 : 0,
           ],
         );
       },
@@ -201,7 +205,7 @@ export function createSqlRepos(db: SqlAdapter): Repos {
           if (!col) continue;
           sets.push(`${col} = ?`);
           if (k === 'thermalEvents') params.push(JSON.stringify(v));
-          else if (k === 'lowConfOverride') params.push(v ? 1 : 0);
+          else if (k === 'lowConfOverride' || k === 'simulated') params.push(v ? 1 : 0);
           else params.push(v as SqlValue);
         }
         if (!sets.length) return;

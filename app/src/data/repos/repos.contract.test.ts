@@ -41,6 +41,7 @@ const mkSession = (id: string, over: Partial<Session> = {}): Session => ({
   processedCount: 0,
   lowConfOverride: false,
   clipPath: null,
+  simulated: false,
   ...over,
 });
 
@@ -128,6 +129,24 @@ describe.each([
     expect(s?.processedCount).toBe(5);
     expect(s?.thermalEvents).toEqual(['serious@120s']);
     expect(s?.status).toBe('complete');
+  });
+
+  it('records whether a session was simulated, and never loses the flag', () => {
+    // Without this the data cannot distinguish a synthesised speed from a
+    // measured one, and neither can any screen reading it back.
+    repos.sessions.insert(mkSession('s_sim', { simulated: true }));
+    repos.sessions.insert(mkSession('s_real', { simulated: false }));
+
+    expect(repos.sessions.get('s_sim')?.simulated).toBe(true);
+    expect(repos.sessions.get('s_real')?.simulated).toBe(false);
+
+    // ...and it survives an unrelated update.
+    repos.sessions.update('s_sim', { status: 'complete', processedCount: 3 });
+    expect(repos.sessions.get('s_sim')?.simulated).toBe(true);
+
+    expect(repos.sessions.listSummaries().find((s) => s.session.id === 's_sim')?.session.simulated).toBe(
+      true,
+    );
   });
 
   it('excludes low-confidence deliveries from the trend but not from lists', () => {

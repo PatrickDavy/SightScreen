@@ -38,6 +38,9 @@ function HomeStackScreen() {
       <HomeStack.Screen name="Home">
         {() => <Placeholder title="Home" screenId="S10" />}
       </HomeStack.Screen>
+      <HomeStack.Screen name="Review">
+        {() => <Placeholder title="Session review" screenId="S30" />}
+      </HomeStack.Screen>
     </HomeStack.Navigator>
   );
 }
