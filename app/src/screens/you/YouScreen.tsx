@@ -65,7 +65,6 @@ export function YouScreen({ navigation }: Props) {
             </MonoNote>
             <View style={{ flexDirection: 'row', gap: sp[2], marginTop: sp[1] }}>
               <Badge tone="inverse">No account yet</Badge>
-              {policy?.consentPending ? <Badge tone="watch">Consent pending</Badge> : null}
             </View>
             <Text
               style={{

@@ -6,6 +6,11 @@
  * sourced and dated, before any user sees them. The `illustrative` flag must
  * survive to the UI as a mono footnote so nobody mistakes these for sourced
  * medical guidance.
+ *
+ * The U17 and U19 bands are unreachable from a new account in v1, because
+ * onboarding refuses under-18s — see [[juniorPolicy]] for why they stay. They
+ * are still returned for accounts that predate that gate, and `guidelineFor`
+ * is still total across every age, so nothing here changes when minors return.
  */
 
 export interface Guideline {

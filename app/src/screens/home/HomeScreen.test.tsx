@@ -172,6 +172,12 @@ describe('S10 home', () => {
     expect(view.getByText('U17 account')).toBeTruthy();
   });
 
+  it('carries no age-band badge for an adult', async () => {
+    const { view } = await setupHome(1996);
+    expect(view.queryByText('U17 account')).toBeNull();
+    expect(view.queryByText('U19 account')).toBeNull();
+  });
+
   it('points at the next drill once there is an insight', async () => {
     const { view } = await setupHome(1996, seedSession);
     expect(view.getByText('Brace your front knee, then retest')).toBeTruthy();

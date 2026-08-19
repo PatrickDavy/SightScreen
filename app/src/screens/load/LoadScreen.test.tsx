@@ -117,6 +117,13 @@ describe('S50 the workload ledger', () => {
     expect(view.getByText('U17 guideline · illustrative figures')).toBeTruthy();
   });
 
+  it('judges an adult against the senior band, not a junior one', async () => {
+    const thisYear = new Date(systemClock.now()).getFullYear();
+    const { view } = await setup(thisYear - 30, (r) => addLoad(r, 8, 1));
+    expect(view.queryByText(/U17 guideline/)).toBeNull();
+    expect(view.getByText(/Senior guideline/)).toBeTruthy();
+  });
+
   it('counts a manual entry into the ledger with its weighting', async () => {
     const { view, repos } = await setup(1996, (r) => addLoad(r, 4, 1));
 

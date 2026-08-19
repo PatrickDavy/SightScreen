@@ -1,6 +1,26 @@
 /**
  * Junior and guardian mode — structural, not cosmetic; gated on account age at
  * the data layer, not in the view (handover §5).
+ *
+ * UNREACHABLE IN v1, DELIBERATELY. Onboarding refuses anyone under 18 (see
+ * [[accountAge]]), so no new account can make `isJunior` true. Nothing here is
+ * dead code and none of it should be deleted:
+ *
+ *   1. Accounts created before that gate landed still exist on their owners'
+ *      phones and still run through this policy. The gate blocks new sign-ups;
+ *      it does not evict anyone already here. Those accounts are why the tests
+ *      below still assert junior behaviour.
+ *   2. Under-18 quicks are the bowlers the workload ledger was built for. The
+ *      handover names the age gate, guardian consent, the ledger and confidence
+ *      flagging as the ethical floor, and warns that retrofitting them later
+ *      means retrofitting onto real minors' data. Two of the four survive v1.
+ *
+ * To readmit minors, three things must exist, in this order: a service that can
+ * actually deliver a consent request to a guardian and record the reply (the
+ * old S03 screen claimed to do this and sent nothing — see the header of
+ * OnboardingScreen); the guardian view, S72; and compliance with Play's
+ * Families policy plus the UK AADC / GDPR Article 8 obligations the handover
+ * lists. Restoring the onboarding step alone would recreate the original lie.
  */
 import { ConsentState } from './types';
 
