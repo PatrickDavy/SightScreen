@@ -10,13 +10,18 @@
  * app has no networking and sent nothing. A false claim about a child-safety
  * mechanism is worse than an absent one. Reinstating it means building the
  * service first, not restoring the screen.
+ *
+ * With consent gone, the gate stops rather than diverts: v1 is 18 and over. The
+ * tests below check that it stops, that nothing is written when it does, and
+ * that a mistyped year is recoverable — a gate that cannot be corrected is a
+ * gate that teaches people to lie to it.
  */
 import { fireEvent, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 import { createMemoryRepos } from '@/data/repos/memoryRepos';
 import type { Repos } from '@/data/repos/types';
-import { juniorPolicy } from '@/domain/juniorPolicy';
+import { MINIMUM_AGE } from '@/domain/accountAge';
 import { renderScreen } from '@/testing/renderScreen';
 
 import { OnboardingScreen } from './OnboardingScreen';
@@ -97,15 +102,50 @@ describe('first run', () => {
 describe('the age gate', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('sends an under-18 bowler straight on, asking for no guardian', async () => {
+  it('stops an under-18 bowler rather than letting them through', async () => {
     const { view } = await setup();
     await press(view.getByText('Get started'));
     await chooseYearOfBirth(view, String(thisYear - 15));
     await press(view.getByText('Continue'));
 
-    expect(view.getByText('Your action, on paper')).toBeTruthy();
+    expect(view.getByText('Sightscreen is 18 and over for now')).toBeTruthy();
+    expect(view.queryByText('Your action, on paper')).toBeNull();
+    // And it never was a diversion to a guardian, which no longer exists.
     expect(view.queryByText('A guardian signs off')).toBeNull();
     expect(view.queryByTestId('guardian-email')).toBeNull();
+  });
+
+  it('writes nothing when it turns someone away', async () => {
+    const { view, repos } = await setup();
+    await press(view.getByText('Get started'));
+    await chooseYearOfBirth(view, String(thisYear - 15));
+    await press(view.getByText('Continue'));
+
+    expect(repos.bowler.get()).toBeNull();
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('lets a mistyped year be corrected rather than dead-ending', async () => {
+    const { view } = await setup();
+    await press(view.getByText('Get started'));
+    await chooseYearOfBirth(view, String(thisYear - 15));
+    await press(view.getByText('Continue'));
+
+    await press(view.getByText('Change year of birth'));
+    expect(view.getByText('When were you born?')).toBeTruthy();
+
+    await chooseYearOfBirth(view, String(thisYear - 30));
+    await press(view.getByText('Continue'));
+    expect(view.getByText('Your action, on paper')).toBeTruthy();
+  });
+
+  it('admits someone turning exactly eighteen', async () => {
+    const { view } = await setup();
+    await press(view.getByText('Get started'));
+    await chooseYearOfBirth(view, String(thisYear - MINIMUM_AGE));
+    await press(view.getByText('Continue'));
+
+    expect(view.getByText('Your action, on paper')).toBeTruthy();
   });
 
   it('does not ask an adult for a guardian', async () => {
@@ -118,14 +158,13 @@ describe('the age gate', () => {
     expect(view.getByText('Your action, on paper')).toBeTruthy();
   });
 
-  it('says what an under-18 account changes, before it is chosen', async () => {
+  it('says the account will be refused before the year is committed', async () => {
     const { view } = await setup();
     await press(view.getByText('Get started'));
     await chooseYearOfBirth(view, String(thisYear - 15));
 
-    expect(
-      view.getByText('Under-18: workload comes first, and sharing and export stay off.'),
-    ).toBeTruthy();
+    // Told at the point of choosing, not after a form has been filled in.
+    expect(view.getByText('Sightscreen is 18 and over for now.')).toBeTruthy();
   });
 
   it('keeps the guideline figures flagged as illustrative', async () => {
@@ -139,11 +178,11 @@ describe('the age gate', () => {
 describe('no guardian consent is claimed', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  async function completeAsJunior() {
+  async function complete() {
     const ctx = await setup();
     const { view } = ctx;
     await press(view.getByText('Get started'));
-    await chooseYearOfBirth(view, String(thisYear - 15));
+    await chooseYearOfBirth(view, String(thisYear - 30));
     await press(view.getByText('Continue')); // age → profile
     await press(view.getByText('Continue')); // profile → goals
     await press(view.getByText('Continue')); // goals → permissions
@@ -153,24 +192,19 @@ describe('no guardian consent is claimed', () => {
   }
 
   it('never collects a guardian address it cannot send anything to', async () => {
-    const { repos } = await completeAsJunior();
+    const { repos } = await complete();
     expect(repos.bowler.get()?.guardianEmail).toBeNull();
   });
 
   it('never records consent as pending, because nothing was ever requested', async () => {
-    const { repos } = await completeAsJunior();
+    const { repos } = await complete();
     expect(repos.bowler.get()?.consentState).toBe('none');
   });
 
-  it('leaves a junior restricted rather than pretending a guardian was asked', async () => {
-    const { repos } = await completeAsJunior();
-    const bowler = repos.bowler.get()!;
-
-    // Sharing and export stay off; capture and workload do not.
-    const policy = juniorPolicy(bowler.yob, bowler.consentState, thisYear);
-    expect(policy.sharingEnabled).toBe(false);
-    expect(policy.exportEnabled).toBe(false);
-    expect(policy.consentPending).toBe(false);
+  it('offers no guardian step at any point in the flow', async () => {
+    const { view } = await complete();
+    expect(view.queryByText('A guardian signs off')).toBeNull();
+    expect(view.queryByTestId('guardian-email')).toBeNull();
   });
 });
 
@@ -219,21 +253,6 @@ describe('finishing onboarding', () => {
   it('goes straight into the first capture when asked to', async () => {
     await completeAsAdult(true);
     expect(navigate).toHaveBeenCalledWith('Capture', { type: 'net' });
-  });
-
-  it('lands an under-18 account on the workload surface instead', async () => {
-    const { view } = await setup();
-    await press(view.getByText('Get started'));
-    await chooseYearOfBirth(view, String(thisYear - 15));
-    await press(view.getByText('Continue'));
-    await press(view.getByText('Continue'));
-    await press(view.getByText('Continue'));
-    await press(view.getByText('Continue'));
-    await press(view.getByText('Go to home'));
-
-    // Safety is structure: for a junior, workload is the default surface.
-    const reset = dispatch.mock.calls[0]?.[0];
-    expect(reset.payload.routes[0].params.screen).toBe('LoadTab');
   });
 
   it('explains why it asks for arm span', async () => {

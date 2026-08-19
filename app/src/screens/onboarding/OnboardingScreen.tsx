@@ -14,6 +14,11 @@
  * Consent has to be completed on the guardian's own device, which needs a
  * service that does not exist. Until it does, the flow does not claim otherwise.
  * `ConsentState` stays in the domain layer for when it is reinstated.
+ *
+ * With consent gone, the gate has to do the stopping: v1 is 18 and over, so an
+ * under-18 year of birth ends the flow at S02 rather than passing through it.
+ * Existing junior accounts are left alone — the gate blocks new sign-ups, it
+ * does not evict anyone who is already here.
  */
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommonActions } from '@react-navigation/native';
@@ -22,6 +27,7 @@ import { Text, View } from 'react-native';
 
 import { useRepos } from '@/app/ReposProvider';
 import { Card, Icon, Input, Radio, Select, Tag } from '@/components';
+import { meetsMinimumAge } from '@/domain/accountAge';
 import { systemClock } from '@/domain/clock';
 import { guidelineFor, guidelineFootnote } from '@/domain/guidelines';
 import { newId } from '@/domain/ids';
@@ -44,7 +50,7 @@ const GOALS = ['More pace', 'Smoother action', 'Stay injury-free'];
 const YOUNGEST_AGE = 8;
 const OLDEST_AGE = 60;
 
-type Step = 'welcome' | 'age' | 'profile' | 'goals' | 'permissions' | 'setup';
+type Step = 'welcome' | 'age' | 'blocked' | 'profile' | 'goals' | 'permissions' | 'setup';
 
 export function OnboardingScreen({ navigation }: Props) {
   const { repos, mutate } = useRepos();
@@ -60,7 +66,7 @@ export function OnboardingScreen({ navigation }: Props) {
   );
 
   const [step, setStep] = useState<Step>('welcome');
-  const [yob, setYob] = useState<string>(String(nowYear - 17));
+  const [yob, setYob] = useState<string>(String(nowYear - 25));
   const [arm, setArm] = useState<Arm>('right');
   const [bowlingType, setBowlingType] = useState<BowlingType>('Pace');
   const [heightCm, setHeightCm] = useState('');
@@ -69,9 +75,17 @@ export function OnboardingScreen({ navigation }: Props) {
   const [fix, setFix] = useState<string | null>(null);
 
   const junior = isJunior(Number(yob), nowYear);
+  const oldEnough = meetsMinimumAge(Number(yob), nowYear);
   const guideline = guidelineFor(Number(yob), nowYear);
 
   const finish = (startCapture: boolean) => {
+    // Unreachable from the flow — S02 stops an under-age bowler before profile.
+    // It is here so that a future entry point cannot create an account the age
+    // gate would have refused.
+    if (!meetsMinimumAge(Number(yob), nowYear)) {
+      throw new Error('Sightscreen accounts are 18 and over');
+    }
+
     const bowler: Bowler = {
       id: newId('bowler', systemClock.now()),
       yob: Number(yob),
@@ -130,7 +144,7 @@ export function OnboardingScreen({ navigation }: Props) {
         // Never "are you over 18?", which teaches lying.
         subtitle="So we can set safe bowling limits — they change with age."
         ctaLabel="Continue"
-        onCta={() => setStep('profile')}
+        onCta={() => setStep(oldEnough ? 'profile' : 'blocked')}
       >
         <Select
           label="Year of birth"
@@ -138,13 +152,27 @@ export function OnboardingScreen({ navigation }: Props) {
           value={yob}
           onChange={setYob}
           hint={
-            junior
-              ? 'Under-18: workload comes first, and sharing and export stay off.'
-              : 'Adult guidelines apply.'
+            oldEnough
+              ? 'Adult guidelines apply.'
+              : 'Sightscreen is 18 and over for now.'
           }
           testID="year-of-birth"
         />
         <MonoNote>{guidelineFootnote(guideline)}</MonoNote>
+      </OnboardingFrame>
+    );
+  }
+
+  if (step === 'blocked') {
+    return (
+      <OnboardingFrame
+        eyebrow="S02 · AGE GATE"
+        title="Sightscreen is 18 and over for now"
+        subtitle="Not because your bowling isn't worth measuring. An under-18 account needs a guardian to consent on their own device, and that isn't built yet. We'd rather leave you out than run those protections badly."
+        ctaLabel="Change year of birth"
+        onCta={() => setStep('age')}
+      >
+        <MonoNote>NO ACCOUNT WAS CREATED · NOTHING WAS SAVED</MonoNote>
       </OnboardingFrame>
     );
   }
