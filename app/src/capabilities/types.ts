@@ -9,6 +9,7 @@
  * never displayed as if it were measured.
  */
 import { Clock } from '@/domain/clock';
+import { ExportFile } from '@/domain/export';
 import { SceneScale } from '@/domain/calibration';
 import { DeviceHeadroom } from '@/domain/capacity';
 import { Confidence, DeliveryEvents } from '@/domain/types';
@@ -130,8 +131,21 @@ export interface InferenceEngine {
   ): Promise<DeliveryObservation[]>;
 }
 
+export interface WrittenExport {
+  directoryUri: string;
+  fileUris: string[];
+}
+
+/** Writes an export to app-scoped storage and offers it to the share sheet. */
+export interface FileExporter {
+  writeExport(folder: string, files: ExportFile[]): Promise<WrittenExport>;
+  /** True when the share sheet actually opened; false is not a failed export. */
+  share(uri: string): Promise<boolean>;
+}
+
 export interface Capabilities {
   audio: CueAudio;
+  files: FileExporter;
   speech: Speech;
   sensors: DeviceSensors;
   screen: ScreenControl;

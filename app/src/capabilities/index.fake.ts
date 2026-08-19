@@ -22,14 +22,29 @@ export interface FakeOptions extends SimulatedEngineOptions {
   cueLog?: CueName[];
   /** Everything spoken aloud, in order. */
   speechLog?: string[];
+  /** Exports written, in order — assert the file actually got produced. */
+  exportLog?: { folder: string; names: string[] }[];
+  /** Make the share sheet unavailable, as it is on web and without a dev client. */
+  sharingAvailable?: boolean;
 }
 
 export function createFakeCapabilities(options: FakeOptions = {}): Capabilities {
   const cueLog = options.cueLog ?? [];
   const speechLog = options.speechLog ?? [];
   const { capture, inference } = createSimulatedEngines(options);
+  const exportLog = options.exportLog ?? [];
 
   return {
+    files: {
+      writeExport: async (folder, files) => {
+        exportLog.push({ folder, names: files.map((f) => f.name) });
+        return {
+          directoryUri: `file:///fake/${folder}`,
+          fileUris: files.map((f) => `file:///fake/${folder}/${f.name}`),
+        };
+      },
+      share: async () => options.sharingAvailable ?? true,
+    },
     audio: {
       prepare: async () => {},
       play: (cue) => {

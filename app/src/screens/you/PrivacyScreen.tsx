@@ -16,8 +16,10 @@ import React, { useState } from 'react';
 import { Text } from 'react-native';
 
 import { useRepoQuery, useRepos } from '@/app/ReposProvider';
+import { useCapabilities } from '@/capabilities/context';
 import { Button, Card, Dialog } from '@/components';
 import { systemClock } from '@/domain/clock';
+import { buildExport, exportFolderName } from '@/domain/export';
 import { juniorPolicy } from '@/domain/juniorPolicy';
 import type { YouStackParamList } from '@/navigation/types';
 import { useAppStore } from '@/store/useAppStore';
@@ -29,13 +31,58 @@ import { ScreenHeader } from '@/ui/ScreenHeader';
 type Props = NativeStackScreenProps<YouStackParamList, 'Privacy'>;
 
 export function PrivacyScreen({ navigation }: Props) {
-  const { mutate } = useRepos();
+  const { repos, mutate } = useRepos();
+  const { files } = useCapabilities();
   const showToast = useAppStore((s) => s.showToast);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const bowler = useRepoQuery((r) => r.bowler.get());
   const nowYear = new Date(systemClock.now()).getFullYear();
   const policy = bowler ? juniorPolicy(bowler.yob, bowler.consentState, nowYear) : null;
+
+  /**
+   * Write the whole local record out as CSV and offer it to the share sheet.
+   *
+   * Reported honestly in both directions: the toast says what was written, and
+   * a failure says it failed rather than claiming a file that does not exist.
+   * The old version of this button showed a success toast and produced nothing.
+   */
+  const exportEverything = async () => {
+    setExporting(true);
+    try {
+      const at = systemClock.now();
+      const summaries = repos.sessions.listSummaries();
+      const deliveries = summaries.flatMap((s) => repos.deliveries.listForSession(s.session.id));
+      const built = buildExport(
+        {
+          summaries,
+          deliveries,
+          metrics: deliveries.flatMap((d) => repos.metrics.listForDelivery(d.id)),
+          workload: repos.workload.all(),
+          clipPaths: [
+            ...summaries.map((s) => s.session.clipPath),
+            ...deliveries.map((d) => d.clipPath),
+          ].filter((p): p is string => !!p),
+        },
+        at,
+      );
+
+      const written = await files.writeExport(exportFolderName(at), built);
+      const shared = await files.share(written.directoryUri);
+
+      showToast(
+        shared
+          ? `Exported ${built.length} files — ${deliveries.length} deliveries, ${summaries.length} sessions.`
+          : `Exported ${built.length} files to this phone. Sharing is unavailable here.`,
+        'good',
+      );
+    } catch {
+      showToast('Export failed. Nothing was written.', 'over');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const deleteEverything = () => {
     mutate((r) => r.deleteEverything());
@@ -71,10 +118,11 @@ export function PrivacyScreen({ navigation }: Props) {
         variant="secondary"
         icon="download"
         full
-        disabled={policy ? !policy.exportEnabled : false}
-        onPress={() => showToast('Export prepared — measurements as CSV, clips as files.', 'good')}
+        disabled={exporting || (policy ? !policy.exportEnabled : false)}
+        onPress={exportEverything}
+        testID="export-my-data"
       >
-        Export my data
+        {exporting ? 'Preparing your data' : 'Export my data'}
       </Button>
 
       {policy && !policy.exportEnabled ? (

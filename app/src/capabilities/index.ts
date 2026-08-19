@@ -9,6 +9,7 @@
  */
 import { createCueAudio } from './audio';
 import { createDeviceSensors } from './device';
+import { createFileExporter } from './files';
 import { createRecorder } from './recorder';
 import { createScreenControl } from './screen';
 import { createSimulatedEngines } from './simulatedEngine';
@@ -21,6 +22,7 @@ export function createCapabilities(): Capabilities {
   const { capture, inference } = createSimulatedEngines();
   return {
     audio: createCueAudio(),
+    files: createFileExporter(),
     speech: createSpeech(),
     sensors: createDeviceSensors(),
     screen: createScreenControl(),
