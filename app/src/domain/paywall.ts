@@ -39,8 +39,46 @@ export function shouldGate(state: EntitlementState, trigger: PaywallTrigger): bo
   }
 }
 
-export const PRICE = {
-  annual: '£34.99 a year',
-  annualSub: '£2.92 a month, billed once',
-  monthly: '£5.99 a month',
-} as const;
+/**
+ * Prices as Play reports them, already formatted and localised.
+ *
+ * These used to be hardcoded pounds sterling. That was wrong twice over: the
+ * launch territories are New Zealand and Australia, and a displayed price that
+ * does not match what Play actually charges is a policy problem regardless of
+ * currency. Prices belong to the store, not to this file.
+ *
+ * `null` is a legitimate state — offline, or before a billing library exists —
+ * and the paywall must then show no price at all rather than a plausible one.
+ * The product's rule about never printing a number it is not sure of applies to
+ * money as much as to speed.
+ */
+export interface Prices {
+  /** Formatted annual price as Play reports it, e.g. "NZ$59.99". */
+  annual: string;
+  /** Formatted monthly price as Play reports it. */
+  monthly: string;
+  /** Annual price in minor units, for the per-month equivalent. */
+  annualMinorUnits: number;
+  /** ISO 4217, e.g. "NZD". */
+  currencyCode: string;
+}
+
+/**
+ * The monthly equivalent of the annual plan, for the "billed once" line.
+ *
+ * Annual retention runs roughly 2.5x monthly, so the handover's instruction is
+ * to push annual by making it obviously better value — never by manufacturing
+ * urgency. There is no countdown timer anywhere in this flow by design.
+ */
+export function annualPerMonth(prices: Prices): string {
+  const perMonth = prices.annualMinorUnits / 12 / 100;
+  return `${prices.currencyCode} ${perMonth.toFixed(2)} a month, billed once a year`;
+}
+
+/** Savings against twelve monthly payments, or null when it cannot be computed. */
+export function annualSaving(prices: Prices, monthlyMinorUnits: number | null): number | null {
+  if (monthlyMinorUnits == null || monthlyMinorUnits <= 0) return null;
+  const twelveMonths = monthlyMinorUnits * 12;
+  if (twelveMonths <= prices.annualMinorUnits) return null;
+  return Math.round(((twelveMonths - prices.annualMinorUnits) / twelveMonths) * 100);
+}

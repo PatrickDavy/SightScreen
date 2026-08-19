@@ -8,6 +8,7 @@
  * so the UI can say so.
  */
 import { createCueAudio } from './audio';
+import { createBilling } from './billing';
 import { createDeviceSensors } from './device';
 import { createFileExporter } from './files';
 import { createRecorder } from './recorder';
@@ -23,6 +24,7 @@ export function createCapabilities(): Capabilities {
   return {
     audio: createCueAudio(),
     files: createFileExporter(),
+    billing: createBilling(),
     speech: createSpeech(),
     sensors: createDeviceSensors(),
     screen: createScreenControl(),

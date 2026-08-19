@@ -16,7 +16,7 @@ import { useCapabilities } from '@/capabilities/context';
 import type { CaptureHandle } from '@/capabilities/types';
 import { CapacityEstimate, estimateCapacity } from '@/domain/capacity';
 import { monthKey, systemClock } from '@/domain/clock';
-import { recordAnalysis } from '@/domain/paywall';
+import { recordAnalysis, shouldGate } from '@/domain/paywall';
 import { Unit } from '@/domain/types';
 import { spokenSpeed } from '@/domain/units';
 import type { RootStackParamList } from '@/navigation/types';
@@ -274,11 +274,16 @@ export function CaptureScreen({ navigation, route }: Props) {
         },
       });
 
+      // The wall sits at the fourth analysed session of a calendar month, so the
+      // count is recorded first and the decision made on the new value. It is
+      // never reached during first run: the first analysis cannot be the fourth.
       const current = useAppStore.getState().entitlement;
+      let gateAfterReview = false;
       if (current) {
         const next = recordAnalysis(current, monthKey(systemClock.now()));
         repos.settings.set(ENTITLEMENT_KEY, JSON.stringify(next));
         setEntitlement(next);
+        gateAfterReview = shouldGate(next, 'fourth_session');
       }
 
       track('session_captured', {
@@ -289,10 +294,13 @@ export function CaptureScreen({ navigation, route }: Props) {
       useAppStore.getState().bumpData();
       showToast(`Processed. ${result.deliveriesAnalysed} deliveries analysed.`, 'good');
 
+      // Review first, then the wall. The bowler gets what they came for — the
+      // session they just bowled — before being asked for anything.
       navigation.navigate('Tabs', {
         screen: 'HomeTab',
         params: { screen: 'Review', params: { sessionId } },
       });
+      if (gateAfterReview) navigation.navigate('Paywall', { trigger: 'fourth_session' });
     },
     [repos, capabilities, setEntitlement, state.audioEnabled, showToast, navigation],
   );

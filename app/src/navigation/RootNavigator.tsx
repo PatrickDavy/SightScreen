@@ -8,6 +8,7 @@ import React from 'react';
 
 import { CaptureScreen } from '@/screens/capture/CaptureScreen';
 import { OnboardingScreen } from '@/screens/onboarding/OnboardingScreen';
+import { PaywallScreen } from '@/screens/paywall/PaywallScreen';
 
 import { ROOT_NAVIGATOR_ID } from './rootNavigation';
 import { TabNavigator } from './TabNavigator';
@@ -38,6 +39,7 @@ export function RootNavigator({ initialRoute, initialTab }: RootNavigatorProps) 
       >
         <Root.Screen name="Onboarding" component={OnboardingScreen} />
         <Root.Screen name="Capture" component={CaptureScreen} />
+        <Root.Screen name="Paywall" component={PaywallScreen} />
       </Root.Group>
     </Root.Navigator>
   );

@@ -107,6 +107,13 @@ export function YouScreen({ navigation }: Props) {
       </Card>
 
       <ListRow
+        title="Subscription"
+        subtitle="Free tier — three analysed sessions a month"
+        icon="credit-card"
+        onPress={() => navigation.navigate('Subscription')}
+      />
+
+      <ListRow
         title="Data and privacy"
         subtitle="On-device by default"
         icon="lock"

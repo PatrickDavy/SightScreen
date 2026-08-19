@@ -23,6 +23,7 @@ import { ExplainerScreen } from '@/screens/review/ExplainerScreen';
 import { InsightScreen } from '@/screens/review/InsightScreen';
 import { ReviewScreen } from '@/screens/review/ReviewScreen';
 import { PrivacyScreen } from '@/screens/you/PrivacyScreen';
+import { SubscriptionScreen } from '@/screens/you/SubscriptionScreen';
 import { YouScreen } from '@/screens/you/YouScreen';
 import { color, font, sp } from '@/theme/tokens';
 
@@ -79,6 +80,7 @@ function YouStackScreen() {
     <YouStack.Navigator screenOptions={stackOptions}>
       <YouStack.Screen name="You" component={YouScreen} />
       <YouStack.Screen name="Privacy" component={PrivacyScreen} />
+      <YouStack.Screen name="Subscription" component={SubscriptionScreen} />
     </YouStack.Navigator>
   );
 }

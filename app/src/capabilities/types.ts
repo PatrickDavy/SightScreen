@@ -10,6 +10,7 @@
  */
 import { Clock } from '@/domain/clock';
 import { ExportFile } from '@/domain/export';
+import { Prices } from '@/domain/paywall';
 import { SceneScale } from '@/domain/calibration';
 import { DeviceHeadroom } from '@/domain/capacity';
 import { Confidence, DeliveryEvents } from '@/domain/types';
@@ -143,9 +144,29 @@ export interface FileExporter {
   share(uri: string): Promise<boolean>;
 }
 
+/**
+ * Play Billing, behind an interface.
+ *
+ * Nothing implements this against a real store yet — that is issue #35, and it
+ * needs a merchant profile and products in Play Console before it can be
+ * exercised at all. The port exists so the paywall can be built and tested
+ * against the shape it will have, and so the honest failure path (no prices,
+ * no purchase) is the default rather than an afterthought.
+ */
+export interface Billing {
+  /** Null when prices cannot be read — offline, or no billing library yet. */
+  getPrices(): Promise<Prices | null>;
+  /** Resolves true only on a completed, acknowledged purchase. */
+  purchase(plan: 'annual' | 'monthly'): Promise<boolean>;
+  /** Restores an existing subscription on a reinstall. */
+  restore(): Promise<boolean>;
+  readonly available: boolean;
+}
+
 export interface Capabilities {
   audio: CueAudio;
   files: FileExporter;
+  billing: Billing;
   speech: Speech;
   sensors: DeviceSensors;
   screen: ScreenControl;

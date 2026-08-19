@@ -5,6 +5,8 @@
  * should call createFakeCapabilities() directly with a short interval and pass
  * it to the CapabilityProvider, rather than relying on the default.
  */
+import { Prices } from '@/domain/paywall';
+
 import { createSimulatedEngines, SimulatedEngineOptions } from './simulatedEngine';
 import { Capabilities, CueName, ThermalState } from './types';
 
@@ -26,6 +28,12 @@ export interface FakeOptions extends SimulatedEngineOptions {
   exportLog?: { folder: string; names: string[] }[];
   /** Make the share sheet unavailable, as it is on web and without a dev client. */
   sharingAvailable?: boolean;
+  /** Prices as Play would report them. Null models offline, or no billing yet. */
+  prices?: Prices | null;
+  /** Whether a purchase attempt succeeds. */
+  purchaseSucceeds?: boolean;
+  /** Purchases attempted, in order. */
+  purchaseLog?: ('annual' | 'monthly')[];
 }
 
 export function createFakeCapabilities(options: FakeOptions = {}): Capabilities {
@@ -33,8 +41,18 @@ export function createFakeCapabilities(options: FakeOptions = {}): Capabilities 
   const speechLog = options.speechLog ?? [];
   const { capture, inference } = createSimulatedEngines(options);
   const exportLog = options.exportLog ?? [];
+  const purchaseLog = options.purchaseLog ?? [];
 
   return {
+    billing: {
+      available: options.prices !== undefined,
+      getPrices: async () => options.prices ?? null,
+      purchase: async (plan) => {
+        purchaseLog.push(plan);
+        return options.purchaseSucceeds ?? false;
+      },
+      restore: async () => options.purchaseSucceeds ?? false,
+    },
     files: {
       writeExport: async (folder, files) => {
         exportLog.push({ folder, names: files.map((f) => f.name) });

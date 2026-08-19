@@ -7,6 +7,7 @@
  */
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
+import type { PaywallTrigger } from '@/domain/paywall';
 import type { SessionType } from '@/domain/types';
 
 export type HomeStackParamList = {
@@ -31,6 +32,7 @@ export type LoadStackParamList = {
 export type YouStackParamList = {
   You: undefined;
   Privacy: undefined;
+  Subscription: undefined;
 };
 
 export type TabParamList = {
@@ -46,6 +48,8 @@ export type RootStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList> | undefined;
   Onboarding: undefined;
   Capture: { type?: SessionType; resumeSessionId?: string } | undefined;
+  /** S80. Modal above the tabs — never reached during first run. */
+  Paywall: { trigger: PaywallTrigger };
 };
 
 declare global {

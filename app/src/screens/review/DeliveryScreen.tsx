@@ -10,9 +10,12 @@ import { Text, View } from 'react-native';
 import { useRepoQuery, useRepos } from '@/app/ReposProvider';
 import { Badge, Card, Icon, Metric } from '@/components';
 import { DETERMINANTS } from '@/domain/content/determinants';
+import { shouldGate } from '@/domain/paywall';
 import { Unit } from '@/domain/types';
 import { toDisplay } from '@/domain/units';
 import type { HomeStackParamList } from '@/navigation/types';
+import { rootNavigationFrom } from '@/navigation/rootNavigation';
+import { useAppStore } from '@/store/useAppStore';
 import { color, font, leading, sp, text } from '@/theme/tokens';
 import { EventScrubber } from '@/ui/EventScrubber';
 import { MediaPlaceholder } from '@/ui/MediaPlaceholder';
@@ -24,6 +27,22 @@ type Props = NativeStackScreenProps<HomeStackParamList, 'Delivery'>;
 
 export function DeliveryScreen({ navigation, route }: Props) {
   const { sessionId, index } = route.params;
+  const entitlement = useAppStore((s) => s.entitlement);
+
+  /**
+   * The deep metric view is a Pro surface once the free allocation is spent.
+   *
+   * The delivery itself, its speed and its band stay visible either way — what
+   * gates is the explainer behind it. A bowler who has run out of free analysis
+   * still sees every ball they bowled.
+   */
+  const openMetric = (open: () => void) => {
+    if (entitlement && shouldGate(entitlement, 'locked_metric')) {
+      rootNavigationFrom(navigation)?.navigate('Paywall', { trigger: 'locked_metric' });
+      return;
+    }
+    open();
+  };
   const { repos } = useRepos();
 
   const delivery = useRepoQuery((r) =>
@@ -90,7 +109,9 @@ export function DeliveryScreen({ navigation, route }: Props) {
         return (
           <Card
             key={row.key}
-            onPress={() => navigation.navigate('Explainer', { determinantKey: row.key })}
+            onPress={() =>
+              openMetric(() => navigation.navigate('Explainer', { determinantKey: row.key }))
+            }
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: sp[3] }}>
               <View style={{ flex: 1, gap: sp[2] }}>
