@@ -1,0 +1,44 @@
+# Typecheck and tests on every pull request and every push to main.
+#
+# The suite is not decoration: two of its files are product invariants rather
+# than unit tests. bareNumber.lint.test.ts enforces that no measured value
+# renders without its error band, and copy.lint.test.ts enforces sentence case
+# with no emoji and no exclamation marks. Both are rules from the handover that
+# a reviewer would otherwise have to remember.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      # ci, not install: a package-lock that has drifted from package.json
+      # should fail the build rather than be quietly rewritten.
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test -- --ci
