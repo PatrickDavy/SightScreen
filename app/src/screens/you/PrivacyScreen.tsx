@@ -2,7 +2,10 @@
  * S73 — data and privacy.
  *
  * Video is processed on this phone and stays on it. For under-18 accounts data
- * is minimised further, and export is off until a guardian turns it on.
+ * is minimised further and export is off. It does not say a guardian can turn
+ * it on: guardian consent (S03) was removed because nothing ever delivered it,
+ * and copy that points at a switch nobody can reach is the same lie in a
+ * quieter place.
  *
  * Deleting everything is exactly that: there is no cloud copy to restore from,
  * so the dialog says so rather than implying an undo that does not exist.
@@ -58,7 +61,7 @@ export function PrivacyScreen({ navigation }: Props) {
         >
           Your video is processed on this phone and stays on it
           {policy?.isJunior
-            ? ' — under-18 accounts keep everything on-device unless a guardian opts in'
+            ? ' — under-18 accounts keep everything on this phone'
             : ''}
           . Cloud backup only exists once you create an account, and you have not needed one yet.
         </Text>
@@ -75,9 +78,7 @@ export function PrivacyScreen({ navigation }: Props) {
       </Button>
 
       {policy && !policy.exportEnabled ? (
-        <MonoNote>
-          Export is off for under-18 accounts until your guardian turns it on.
-        </MonoNote>
+        <MonoNote>Export is off for under-18 accounts.</MonoNote>
       ) : null}
 
       <Button variant="danger" icon="trash-2" full onPress={() => setConfirmOpen(true)}>

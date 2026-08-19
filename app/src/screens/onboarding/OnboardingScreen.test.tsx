@@ -1,9 +1,15 @@
 /**
- * S01–S07, with the age gate and guardian consent as the load-bearing parts.
+ * S01–S07, with the age gate as the load-bearing part.
  *
- * Those two, the workload ledger and confidence flagging are the handover's
+ * The age gate, the workload ledger and confidence flagging are the handover's
  * ethical floor: retrofitting them later means retrofitting them onto real
  * minors' data, so they are tested as behaviour rather than as markup.
+ *
+ * Guardian consent (S03) is gone, and one test here exists to keep it gone: it
+ * asked for a guardian's email and reported a consent request sent, while the
+ * app has no networking and sent nothing. A false claim about a child-safety
+ * mechanism is worse than an absent one. Reinstating it means building the
+ * service first, not restoring the screen.
  */
 import { fireEvent, waitFor } from '@testing-library/react-native';
 import React from 'react';
@@ -91,13 +97,15 @@ describe('first run', () => {
 describe('the age gate', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it('sends an under-18 bowler to guardian consent', async () => {
+  it('sends an under-18 bowler straight on, asking for no guardian', async () => {
     const { view } = await setup();
     await press(view.getByText('Get started'));
     await chooseYearOfBirth(view, String(thisYear - 15));
     await press(view.getByText('Continue'));
 
-    expect(view.getByText('A guardian signs off')).toBeTruthy();
+    expect(view.getByText('Your action, on paper')).toBeTruthy();
+    expect(view.queryByText('A guardian signs off')).toBeNull();
+    expect(view.queryByTestId('guardian-email')).toBeNull();
   });
 
   it('does not ask an adult for a guardian', async () => {
@@ -116,7 +124,7 @@ describe('the age gate', () => {
     await chooseYearOfBirth(view, String(thisYear - 15));
 
     expect(
-      view.getByText('Under-18: workload comes first and a guardian is looped in.'),
+      view.getByText('Under-18: workload comes first, and sharing and export stay off.'),
     ).toBeTruthy();
   });
 
@@ -128,58 +136,41 @@ describe('the age gate', () => {
   });
 });
 
-describe('guardian consent', () => {
+describe('no guardian consent is claimed', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  async function reachConsent() {
+  async function completeAsJunior() {
     const ctx = await setup();
     const { view } = ctx;
     await press(view.getByText('Get started'));
     await chooseYearOfBirth(view, String(thisYear - 15));
-    await press(view.getByText('Continue'));
+    await press(view.getByText('Continue')); // age → profile
+    await press(view.getByText('Continue')); // profile → goals
+    await press(view.getByText('Continue')); // goals → permissions
+    await press(view.getByText('Continue')); // permissions → setup
+    await press(view.getByText('Go to home'));
     return ctx;
   }
 
-  it('will not send without an address that could reach a guardian', async () => {
-    const { view } = await reachConsent();
-    const cta = view.getByTestId('onboarding-cta');
-    expect(cta.props.accessibilityState?.disabled).toBe(true);
+  it('never collects a guardian address it cannot send anything to', async () => {
+    const { repos } = await completeAsJunior();
+    expect(repos.bowler.get()?.guardianEmail).toBeNull();
   });
 
-  it('records consent as pending once the request is sent', async () => {
-    const { view, repos } = await reachConsent();
-
-    await type(view, 'guardian-email', 'parent@example.com');
-    await press(view.getByText('Send consent request'));
-
-    expect(view.getByText('Pending')).toBeTruthy();
-    // The app keeps working meanwhile: capture and workload are not blocked.
-    await press(view.getByText('Continue'));
-    await press(view.getByText('Continue'));
-    await press(view.getByText('Continue'));
-    await press(view.getByText('Continue'));
-    await press(view.getByText('Go to home'));
-
-    const bowler = repos.bowler.get();
-    expect(bowler?.consentState).toBe('pending');
-    expect(bowler?.guardianEmail).toBe('parent@example.com');
+  it('never records consent as pending, because nothing was ever requested', async () => {
+    const { repos } = await completeAsJunior();
+    expect(repos.bowler.get()?.consentState).toBe('none');
   });
 
-  it('lets a junior proceed without consent, in a restricted state', async () => {
-    const { view, repos } = await reachConsent();
-    await press(view.getByText('Do this later'));
-    await press(view.getByText('Continue'));
-    await press(view.getByText('Continue'));
-    await press(view.getByText('Continue'));
-    await press(view.getByText('Go to home'));
-
+  it('leaves a junior restricted rather than pretending a guardian was asked', async () => {
+    const { repos } = await completeAsJunior();
     const bowler = repos.bowler.get()!;
-    expect(bowler.consentState).toBe('none');
 
     // Sharing and export stay off; capture and workload do not.
     const policy = juniorPolicy(bowler.yob, bowler.consentState, thisYear);
     expect(policy.sharingEnabled).toBe(false);
     expect(policy.exportEnabled).toBe(false);
+    expect(policy.consentPending).toBe(false);
   });
 });
 
@@ -235,7 +226,6 @@ describe('finishing onboarding', () => {
     await press(view.getByText('Get started'));
     await chooseYearOfBirth(view, String(thisYear - 15));
     await press(view.getByText('Continue'));
-    await press(view.getByText('Do this later'));
     await press(view.getByText('Continue'));
     await press(view.getByText('Continue'));
     await press(view.getByText('Continue'));

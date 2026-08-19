@@ -5,8 +5,15 @@
  * is captured, processed and reviewed anonymously on this phone, because a
  * registration wall before the aha moment is the single largest drop-off cause
  * in consumer apps and this product's aha is unusually strong. And the age gate
- * is not a formality: it decides the guidelines, the home surface, whether a
- * guardian is looped in, and what leaves the device.
+ * is not a formality: it decides the guidelines, the home surface, and what
+ * leaves the device.
+ *
+ * S03 — guardian consent — is deliberately absent. It collected a guardian's
+ * email address and told the bowler a consent request had been sent, while
+ * sending nothing: the app has no networking, so nobody was ever contacted.
+ * Consent has to be completed on the guardian's own device, which needs a
+ * service that does not exist. Until it does, the flow does not claim otherwise.
+ * `ConsentState` stays in the domain layer for when it is reinstated.
  */
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommonActions } from '@react-navigation/native';
@@ -14,7 +21,7 @@ import React, { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { useRepos } from '@/app/ReposProvider';
-import { Badge, Card, Icon, Input, Radio, Select, Tag } from '@/components';
+import { Card, Icon, Input, Radio, Select, Tag } from '@/components';
 import { systemClock } from '@/domain/clock';
 import { guidelineFor, guidelineFootnote } from '@/domain/guidelines';
 import { newId } from '@/domain/ids';
@@ -37,7 +44,7 @@ const GOALS = ['More pace', 'Smoother action', 'Stay injury-free'];
 const YOUNGEST_AGE = 8;
 const OLDEST_AGE = 60;
 
-type Step = 'welcome' | 'age' | 'consent' | 'profile' | 'goals' | 'permissions' | 'setup';
+type Step = 'welcome' | 'age' | 'profile' | 'goals' | 'permissions' | 'setup';
 
 export function OnboardingScreen({ navigation }: Props) {
   const { repos, mutate } = useRepos();
@@ -54,8 +61,6 @@ export function OnboardingScreen({ navigation }: Props) {
 
   const [step, setStep] = useState<Step>('welcome');
   const [yob, setYob] = useState<string>(String(nowYear - 17));
-  const [guardianEmail, setGuardianEmail] = useState('');
-  const [consentSent, setConsentSent] = useState(false);
   const [arm, setArm] = useState<Arm>('right');
   const [bowlingType, setBowlingType] = useState<BowlingType>('Pace');
   const [heightCm, setHeightCm] = useState('');
@@ -77,10 +82,11 @@ export function OnboardingScreen({ navigation }: Props) {
       targetSpeedKmh: targetSpeed ? Number(targetSpeed) : null,
       fix,
       unit: 'km/h',
-      guardianEmail: junior && guardianEmail ? guardianEmail : null,
-      // Junior accounts start restricted: capture and workload work, sharing
-      // and export do not, until a guardian consents on their own device.
-      consentState: junior ? (consentSent ? 'pending' : 'none') : 'none',
+      guardianEmail: null,
+      // No consent can be recorded while there is no way to obtain one. Junior
+      // accounts therefore stay restricted: capture and workload work, sharing
+      // and export do not.
+      consentState: 'none',
     };
     mutate((r) => r.bowler.save(bowler));
     track('onboarding_complete', { junior, consent: bowler.consentState });
@@ -124,7 +130,7 @@ export function OnboardingScreen({ navigation }: Props) {
         // Never "are you over 18?", which teaches lying.
         subtitle="So we can set safe bowling limits — they change with age."
         ctaLabel="Continue"
-        onCta={() => setStep(junior ? 'consent' : 'profile')}
+        onCta={() => setStep('profile')}
       >
         <Select
           label="Year of birth"
@@ -133,61 +139,12 @@ export function OnboardingScreen({ navigation }: Props) {
           onChange={setYob}
           hint={
             junior
-              ? 'Under-18: workload comes first and a guardian is looped in.'
+              ? 'Under-18: workload comes first, and sharing and export stay off.'
               : 'Adult guidelines apply.'
           }
           testID="year-of-birth"
         />
         <MonoNote>{guidelineFootnote(guideline)}</MonoNote>
-      </OnboardingFrame>
-    );
-  }
-
-  if (step === 'consent') {
-    return (
-      <OnboardingFrame
-        eyebrow="S03 · GUARDIAN CONSENT"
-        title="A guardian signs off"
-        subtitle="They get an email and consent on their own device. Until then: recording and workload work, sharing doesn't."
-        ctaLabel={consentSent ? 'Continue' : 'Send consent request'}
-        ctaDisabled={!consentSent && !guardianEmail.includes('@')}
-        onCta={() => {
-          if (consentSent) {
-            setStep('profile');
-            return;
-          }
-          setConsentSent(true);
-          showToast('Consent request sent. The app keeps working meanwhile.', 'good');
-        }}
-        ghostLabel="Do this later"
-        onGhost={() => setStep('profile')}
-      >
-        <Input
-          label="Guardian email"
-          icon="mail"
-          inputMode="email"
-          autoCapitalize="none"
-          value={guardianEmail}
-          onChangeText={setGuardianEmail}
-          testID="guardian-email"
-        />
-        {consentSent ? (
-          <Card>
-            <Badge tone="watch">Pending</Badge>
-            <Text
-              style={{
-                fontFamily: font.ui,
-                fontSize: text.xs,
-                lineHeight: text.xs * leading.body,
-                color: color.ink2,
-                marginTop: sp[2],
-              }}
-            >
-              Sent. Read-only workload access for your guardian, alerts on limit breaches, and no
-              access to your video by default.
-            </Text>
-          </Card>
-        ) : null}
       </OnboardingFrame>
     );
   }
