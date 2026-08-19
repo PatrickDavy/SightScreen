@@ -8,11 +8,13 @@
  */
 import { Clock, monthKey, systemClock } from '@/domain/clock';
 import { EntitlementState, rolledOver } from '@/domain/paywall';
+import { setAnalyticsEnabled } from '@/services/analytics';
 import { juniorPolicy } from '@/domain/juniorPolicy';
 import { Bowler } from '@/domain/types';
 import { Repos } from '@/data/repos/types';
 
 export const ENTITLEMENT_KEY = 'entitlement';
+export const ANALYTICS_KEY = 'analyticsEnabled';
 
 export interface BootResult {
   repos: Repos;
@@ -64,6 +66,10 @@ export function runBoot({
 
   const entitlement = rolledOver(readEntitlement(repos, now), monthKey(now));
   repos.settings.set(ENTITLEMENT_KEY, JSON.stringify(entitlement));
+
+  // Applied before any screen mounts, so an opted-out install never emits a
+  // first event on the way to reading the preference.
+  setAnalyticsEnabled(repos.settings.get(ANALYTICS_KEY) !== 'off');
 
   const bowler = repos.bowler.get();
   const policy = bowler

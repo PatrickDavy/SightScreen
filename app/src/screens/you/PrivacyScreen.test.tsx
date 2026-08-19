@@ -14,6 +14,9 @@ import { createMemoryRepos } from '@/data/repos/memoryRepos';
 import type { Repos } from '@/data/repos/types';
 import { systemClock } from '@/domain/clock';
 import { Bowler, Delivery, Session } from '@/domain/types';
+import { ANALYTICS_KEY } from '@/app/boot';
+import { analyticsEnabled, setAnalyticsEnabled, track } from '@/services/analytics';
+import { setAnalytics } from '@/services/analytics';
 import { renderScreen } from '@/testing/renderScreen';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -157,5 +160,49 @@ describe('exporting your data', () => {
     fireEvent.press(view.getByTestId('export-my-data'));
     expect(exportLog).toHaveLength(0);
     expect(view.getByText('Export is off for under-18 accounts.')).toBeTruthy();
+  });
+});
+
+describe('analytics consent', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setAnalyticsEnabled(true);
+  });
+
+  afterAll(() => setAnalyticsEnabled(true));
+
+  it('is on by default, while nothing leaves the device', async () => {
+    const { view } = await setup();
+    expect(view.getByText('Usage analytics')).toBeTruthy();
+    expect(analyticsEnabled()).toBe(true);
+  });
+
+  it('says what is collected and what never is', async () => {
+    const { view } = await setup();
+    expect(view.getByText(/Never your video, never your pose data/)).toBeTruthy();
+    expect(view.getByText(/nothing leaves this phone/)).toBeTruthy();
+  });
+
+  it('persists an opt-out so it survives a relaunch', async () => {
+    const repos = seeded();
+    const { view } = await setup(repos);
+
+    fireEvent(view.getByText('Usage analytics'), 'onChange', false);
+    await waitFor(() => expect(repos.settings.get(ANALYTICS_KEY)).toBe('off'));
+  });
+
+  it('stops events at the gate rather than at each call site', async () => {
+    const events: string[] = [];
+    setAnalytics({ track: (event) => events.push(event) });
+
+    setAnalyticsEnabled(false);
+    track('session_captured');
+    expect(events).toEqual([]);
+
+    setAnalyticsEnabled(true);
+    track('session_captured');
+    expect(events).toEqual(['session_captured']);
+
+    setAnalytics({ track: () => {} });
   });
 });

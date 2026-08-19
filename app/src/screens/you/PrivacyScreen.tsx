@@ -17,11 +17,13 @@ import { Text } from 'react-native';
 
 import { useRepoQuery, useRepos } from '@/app/ReposProvider';
 import { useCapabilities } from '@/capabilities/context';
-import { Button, Card, Dialog } from '@/components';
+import { Button, Card, Dialog, Switch } from '@/components';
 import { systemClock } from '@/domain/clock';
 import { buildExport, exportFolderName } from '@/domain/export';
 import { juniorPolicy } from '@/domain/juniorPolicy';
+import { ANALYTICS_KEY } from '@/app/boot';
 import type { YouStackParamList } from '@/navigation/types';
+import { setAnalyticsEnabled } from '@/services/analytics';
 import { useAppStore } from '@/store/useAppStore';
 import { color, font, leading, sp, text } from '@/theme/tokens';
 import { MonoNote } from '@/ui/MonoNote';
@@ -38,6 +40,8 @@ export function PrivacyScreen({ navigation }: Props) {
   const [exporting, setExporting] = useState(false);
 
   const bowler = useRepoQuery((r) => r.bowler.get());
+  const analyticsRaw = useRepoQuery((r) => r.settings.get(ANALYTICS_KEY));
+  const analyticsOn = analyticsRaw !== 'off';
   const nowYear = new Date(systemClock.now()).getFullYear();
   const policy = bowler ? juniorPolicy(bowler.yob, bowler.consentState, nowYear) : null;
 
@@ -128,6 +132,36 @@ export function PrivacyScreen({ navigation }: Props) {
       {policy && !policy.exportEnabled ? (
         <MonoNote>Export is off for under-18 accounts.</MonoNote>
       ) : null}
+
+      {/*
+        Stated as what actually happens, not as a policy summary. Right now the
+        honest answer is that nothing leaves the device at all — no provider is
+        wired up (#56) — and saying so is more useful than a hedge that will
+        still read as true after one is.
+      */}
+      <Card>
+        <Switch
+          label="Usage analytics"
+          checked={analyticsOn}
+          onChange={(next) => {
+            setAnalyticsEnabled(next);
+            mutate((r) => r.settings.set(ANALYTICS_KEY, next ? 'on' : 'off'));
+          }}
+        />
+        <Text
+          style={{
+            marginTop: sp[2],
+            fontFamily: font.ui,
+            fontSize: text.xs,
+            lineHeight: text.xs * leading.body,
+            color: color.ink2,
+          }}
+        >
+          Which screens you reach and where capture fails, so the parts that break can be found.
+          Never your video, never your pose data, never a measurement. No analytics provider is
+          connected yet, so at present nothing leaves this phone either way.
+        </Text>
+      </Card>
 
       <Button variant="danger" icon="trash-2" full onPress={() => setConfirmOpen(true)}>
         Delete everything

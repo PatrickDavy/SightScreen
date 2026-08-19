@@ -45,11 +45,35 @@ const noop: Analytics = {
 
 let current: Analytics = noop;
 
+/**
+ * Opt-out state, checked before anything is dispatched.
+ *
+ * The gate lives here rather than at the call sites for one reason: there are
+ * dozens of call sites and one of them will eventually be added without the
+ * check. A person who has opted out must have opted out of everything, not of
+ * whatever the last author remembered.
+ *
+ * It defaults to on, which is only defensible while `noop` is the sink and
+ * nothing leaves the device. When a provider is wired up under #56, revisit
+ * whether the default should still be on in the launch territories.
+ */
+let enabled = true;
+
 /** Swap the sink — a provider in production, a spy in a test. */
 export function setAnalytics(analytics: Analytics): void {
   current = analytics;
 }
 
+/** Honour the bowler's choice. Applied at boot and whenever they change it. */
+export function setAnalyticsEnabled(next: boolean): void {
+  enabled = next;
+}
+
+export function analyticsEnabled(): boolean {
+  return enabled;
+}
+
 export function track(event: AnalyticsEvent, properties?: AnalyticsProperties): void {
+  if (!enabled) return;
   current.track(event, properties);
 }
