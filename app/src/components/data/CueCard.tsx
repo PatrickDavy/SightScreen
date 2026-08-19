@@ -2,6 +2,11 @@
  * CueCard — the product's promise as a component: one imperative cue, its
  * estimated gain, and the evidence. The only ink-inverse card in the system;
  * the loudest object on any screen, so never more than one per screen.
+ *
+ * Loudest visually has to mean loudest to a screen reader too, or the one thing
+ * arrives as three unrelated fragments after the surrounding chrome. The card
+ * groups itself and announces eyebrow, cue and gain as one sentence; the action
+ * stays separately focusable because it is a separate thing to do.
  */
 import React from 'react';
 import { Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
@@ -31,6 +36,12 @@ export function CueCard({
   style,
   testID,
 }: CueCardProps) {
+  // Only text contributes; a ReactNode cue or detail is announced by its own
+  // children rather than being coerced into "[object Object]".
+  const announcement = [eyebrow, typeof cue === 'string' ? cue : null, gain]
+    .filter(Boolean)
+    .join('. ');
+
   return (
     <View
       style={[
@@ -44,6 +55,8 @@ export function CueCard({
         style,
       ]}
       testID={testID}
+      accessible
+      accessibilityLabel={announcement}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
         <Icon name="target" size={13} strokeWidth={2.5} color={color.cherrySoft} />
@@ -100,7 +113,10 @@ export function CueCard({
             alignSelf: 'flex-start',
             gap: 8,
             marginTop: 16,
-            height: 36,
+            // minHeight, not height: at the platform's large accessibility type
+            // sizes a fixed 36 clips the label. Grows, never truncates.
+            minHeight: 44,
+            paddingVertical: 8,
             paddingHorizontal: 14,
             backgroundColor: pressed ? color.inversePressed : 'transparent',
             borderWidth: border.strong,

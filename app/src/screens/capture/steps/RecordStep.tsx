@@ -58,6 +58,11 @@ export function RecordStep({ count, problem, onEnd }: RecordStepProps) {
       <Pressable
         onPress={onEnd}
         accessibilityRole="button"
+        // The bowler is not looking at the phone, so the state change has to
+        // announce itself rather than wait to be focused. This is the screen
+        // reader's equivalent of the alert tone, and it carries the same
+        // information — colour is never the only signal.
+        accessibilityLiveRegion="polite"
         accessibilityLabel={
           problem
             ? `${problem.spoken}. ${count} deliveries so far. Tap anywhere to end.`
