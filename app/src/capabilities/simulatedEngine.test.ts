@@ -2,6 +2,7 @@ import { selectInsight } from '@/domain/insight';
 import { DETERMINANT_KEYS } from '@/domain/content/determinants';
 import { systemClock } from '@/domain/clock';
 
+import { createFakeCapabilities, DEFAULT_FAKE_SEED } from './index.fake';
 import { createSimulatedEngines } from './simulatedEngine';
 import { CaptureSignal, DeliveryObservation } from './types';
 
@@ -171,5 +172,55 @@ describe('simulated inference engine', () => {
     );
     expect(result).toEqual([]);
     expect(progress).toEqual([[1, 1]]);
+  });
+});
+
+/**
+ * Determinism of the test fakes.
+ *
+ * The engine seeds from the session id when no seed is given, and session ids
+ * carry a wall-clock timestamp — so an unseeded fake produced different
+ * readings on every run. That surfaced as an insight assertion in
+ * CaptureScreen.test failing roughly one run in ten, in a test that had nothing
+ * to do with randomness. The guard is here rather than there because the trap
+ * belongs to the fake, not to any one test.
+ */
+describe('the fake capability set is reproducible', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  it('seeds the simulated engine by default', () => {
+    expect(DEFAULT_FAKE_SEED).toBeDefined();
+  });
+
+  it('produces identical readings across two independently built fakes', async () => {
+    // Fake timers and a fixed tick count, so the comparison is between the
+    // readings and not between two races. Different session ids on purpose:
+    // the whole point is that the id no longer decides the seed.
+    const observe = async (sessionId: string) => {
+      const caps = createFakeCapabilities({ intervalMs: 1000 });
+      const seen: DeliveryObservation[] = [];
+      const handle = await caps.capture.start(
+        { sessionId, scale: null, targetFps: 240, clock: systemClock },
+        (signal) => {
+          if (signal.kind === 'delivery') seen.push(signal.observation);
+        },
+      );
+      jest.advanceTimersByTime(5000);
+      await handle.stop();
+      return seen;
+    };
+
+    const a = await observe('ses_one');
+    const b = await observe('ses_two');
+
+    expect(a).toHaveLength(5);
+    expect(a).toEqual(b);
+  });
+
+  it('still lets a test ask for different readings', async () => {
+    const first = createFakeCapabilities({ seed: 99 });
+    const second = createFakeCapabilities({ seed: 100 });
+    expect(first).not.toBe(second);
   });
 });

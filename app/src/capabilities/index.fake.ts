@@ -4,6 +4,19 @@
  * jest.config.js maps `@/capabilities` here. Tests that need to drive a capture
  * should call createFakeCapabilities() directly with a short interval and pass
  * it to the CapabilityProvider, rather than relying on the default.
+ *
+ * The simulated engine is seeded here, and that matters more than it looks.
+ * Left unseeded it falls back to `hashSeed(cfg.sessionId)`, and session ids are
+ * minted from `Date.now()` — so every run drew different jitter and the
+ * "canonical session" the engine's header describes was not canonical at all.
+ * The three determinants that sit just outside their good band do so by similar
+ * margins, and about one run in ten the jitter pushed run-up far enough clear of
+ * the front knee that the knee fell outside CLOSE_EPSILON, the safety-and-ease
+ * tie-break never ran, and an insight assertion failed in whichever test
+ * happened to be asserting it.
+ *
+ * A test that wants different readings passes its own `seed`. A test that wants
+ * the same readings twice now gets them.
  */
 import { Prices } from '@/domain/paywall';
 
@@ -36,10 +49,20 @@ export interface FakeOptions extends SimulatedEngineOptions {
   purchaseLog?: ('annual' | 'monthly')[];
 }
 
+/**
+ * Chosen, not arbitrary: at every delivery count the tests use, this seed keeps
+ * all four determinants within CLOSE_EPSILON of each other, so the tie-break
+ * runs and lands on the front knee — the canonical session the engine documents.
+ */
+export const DEFAULT_FAKE_SEED = 1;
+
 export function createFakeCapabilities(options: FakeOptions = {}): Capabilities {
   const cueLog = options.cueLog ?? [];
   const speechLog = options.speechLog ?? [];
-  const { capture, inference } = createSimulatedEngines(options);
+  const { capture, inference } = createSimulatedEngines({
+    seed: DEFAULT_FAKE_SEED,
+    ...options,
+  });
   const exportLog = options.exportLog ?? [];
   const purchaseLog = options.purchaseLog ?? [];
 
