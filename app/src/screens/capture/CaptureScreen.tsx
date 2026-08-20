@@ -39,6 +39,7 @@ import {
   deliveryCount,
   fastestBandKmh,
   fastestKmh,
+  calibratedScale,
   hasUsableCalibration,
   initialCaptureState,
 } from './captureMachine';
@@ -150,7 +151,10 @@ export function CaptureScreen({ navigation, route }: Props) {
       .start(
         {
           sessionId,
-          scale: null,
+          // The scale the bowler actually established at S22. This used to be
+          // hardcoded null, so the two taps were collected, validated and
+          // persisted — and then thrown away at the moment they were needed.
+          scale: calibratedScale(state),
           targetFps: state.captureFps ?? 240,
           clock: systemClock,
         },

@@ -1,10 +1,13 @@
 import { DeliveryObservation } from '@/capabilities/types';
 
+import { UNCALIBRATED_UNCERTAINTY } from '@/domain/speedBand';
+
 import {
   CaptureAction,
   CaptureState,
   DEFAULT_COUNTDOWN_S,
   averageKmh,
+  calibratedScale,
   captureReducer,
   deliveryCount,
   fastestBandKmh,
@@ -262,5 +265,59 @@ describe('resuming an interrupted session', () => {
     });
     // The footage and its deliveries are never lost.
     expect(deliveryCount(state)).toBe(3);
+  });
+});
+
+/**
+ * The calibration has to reach the capture, not just the Continue button.
+ *
+ * These were two separate readings of the same taps: S22 enabled Continue when
+ * they resolved to a scale, and CaptureScreen then started the engine with
+ * `scale: null` regardless. The taps were collected, validated and persisted,
+ * and then discarded at the one moment they mattered — so every speed was
+ * derived without the scale the bowler had just set.
+ */
+describe('the scale the bowler set is the scale capture uses', () => {
+  const crease = { x: 0.4, y: 0.5 };
+  const stumps = { x: 0.612, y: 0.5 };
+
+  it('produces a scale once the two marks resolve', () => {
+    const state = run([
+      { type: 'toPlacement' },
+      { type: 'toCalibration' },
+      { type: 'addTap', tap: crease },
+      { type: 'addTap', tap: stumps },
+    ]);
+    expect(calibratedScale(state)).not.toBeNull();
+    expect(calibratedScale(state)!.metresPerUnit).toBeGreaterThan(0);
+  });
+
+  it('agrees with what the Continue button told the bowler', () => {
+    const none = run([{ type: 'toPlacement' }, { type: 'toCalibration' }]);
+    expect(hasUsableCalibration(none)).toBe(false);
+    expect(calibratedScale(none)).toBeNull();
+
+    const both = run([
+      { type: 'toPlacement' },
+      { type: 'toCalibration' },
+      { type: 'addTap', tap: crease },
+      { type: 'addTap', tap: stumps },
+    ]);
+    expect(hasUsableCalibration(both)).toBe(true);
+    expect(calibratedScale(both)).not.toBeNull();
+  });
+
+  it('carries the uncertainty the band is built from', () => {
+    const state = run([
+      { type: 'toPlacement' },
+      { type: 'toCalibration' },
+      { type: 'addTap', tap: crease },
+      { type: 'addTap', tap: stumps },
+    ]);
+    const scale = calibratedScale(state)!;
+    expect(scale.uncertainty).toBeGreaterThan(0);
+    // A real calibration must beat the uncalibrated fallback by a wide margin,
+    // or wiring it through bought nothing.
+    expect(scale.uncertainty).toBeLessThan(UNCALIBRATED_UNCERTAINTY / 5);
   });
 });

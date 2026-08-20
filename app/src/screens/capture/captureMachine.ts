@@ -10,7 +10,7 @@
  *            ↳──────────────↗ (venue already calibrated, or overridden)
  *                                        ended → ready (nothing detected)
  */
-import { Tap, sceneScale } from '@/domain/calibration';
+import { SceneScale, Tap, sceneScale } from '@/domain/calibration';
 import { SessionType } from '@/domain/types';
 
 import { DeliveryObservation, ProblemReason } from '@/capabilities/types';
@@ -233,9 +233,22 @@ export function captureReducer(state: CaptureState, action: CaptureAction): Capt
  * session without one cannot produce a speed at all.
  */
 export function hasUsableCalibration(state: CaptureState): boolean {
+  return calibratedScale(state) !== null;
+}
+
+/**
+ * The scene scale for this session, or null when it was never established.
+ *
+ * Both the S22 Continue button and the capture config read this, so the scale
+ * the bowler is told is good is the same one the engine measures against. They
+ * used to disagree: Continue checked the taps resolved, and capture then
+ * started with `scale: null` regardless, discarding the calibration entirely
+ * and leaving every speed unscaled.
+ */
+export function calibratedScale(state: CaptureState): SceneScale | null {
   const [crease, stumps] = state.taps;
-  if (!crease || !stumps) return false;
-  return sceneScale(crease, stumps) !== null;
+  if (!crease || !stumps) return null;
+  return sceneScale(crease, stumps);
 }
 
 export function deliveryCount(state: CaptureState): number {

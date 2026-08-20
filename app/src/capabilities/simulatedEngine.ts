@@ -11,6 +11,7 @@
  * speed may never be presented as a measurement.
  */
 import { DETERMINANTS } from '@/domain/content/determinants';
+import { deliveryBandKmh, errorFor } from '@/domain/speedBand';
 import { Confidence } from '@/domain/types';
 
 import { hashSeed, mulberry32 } from './prng';
@@ -73,9 +74,27 @@ function decimalsFor(key: string): number {
   return key === 'delay' ? 3 : key === 'runup' ? 2 : 1;
 }
 
-function makeObservation(index: number, atMs: number, rnd: () => number): DeliveryObservation {
+/**
+ * The speed is synthesised. The band around it is not.
+ *
+ * It is computed from the session's real calibration through the real formula,
+ * because the band answers a question that does not depend on the speed being
+ * measured: given these two taps at this standoff, how precisely could a speed
+ * be known? Deriving it here means the band arithmetic is exercised and tested
+ * long before a tracker exists, and it means the calibration work shows up
+ * where it should — in a wider or narrower band on screen.
+ *
+ * The session still records `simulated: true`, and the review screens still say
+ * so. A real band on an invented number is not a claim that the number is real.
+ */
+function makeObservation(
+  index: number,
+  atMs: number,
+  rnd: () => number,
+  scaleUncertainty: number | null,
+): DeliveryObservation {
   const speedKmh = round(105 + rnd() * 12, 1);
-  const speedBandKmh = round(1.9 + rnd(), 1);
+  const speedBandKmh = round(deliveryBandKmh(speedKmh, errorFor(scaleUncertainty)), 1);
   const engineConfidence: Confidence = rnd() < 0.18 ? 'low' : 'ok';
   const frameCount = 19 + Math.floor(rnd() * 10);
 
@@ -137,7 +156,12 @@ export function createSimulatedEngines(options: SimulatedEngineOptions = {}): {
       const tick = () => {
         if (stopped) return;
         elapsed += intervalMs;
-        const observation = makeObservation(observations.length + 1, elapsed, rnd);
+        const observation = makeObservation(
+          observations.length + 1,
+          elapsed,
+          rnd,
+          cfg.scale?.uncertainty ?? null,
+        );
         observations.push(observation);
         onSignal({ kind: 'delivery', observation });
         timers.push(setTimer(tick, intervalMs));
