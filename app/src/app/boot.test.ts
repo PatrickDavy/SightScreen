@@ -32,6 +32,7 @@ const session = (id: string, status: Session['status']): Session => ({
   endedAt: null,
   deviceModel: null,
   captureFps: 240,
+  scaleUncertainty: null,
   thermalEvents: [],
   calibrationId: null,
   weighting: 1,

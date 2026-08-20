@@ -50,6 +50,7 @@ const session = (): Session => ({
   endedAt: systemClock.now(),
   deviceModel: null,
   captureFps: 240,
+  scaleUncertainty: null,
   thermalEvents: [],
   calibrationId: null,
   weighting: 1,

@@ -37,8 +37,11 @@ export function compareRetest(
  *  this one's real". */
 export function deltaSentence(delta: number, band: number, unit: string): string {
   const sign = delta >= 0 ? '+' : '';
+  // "Average" is stated because the comparison is on the session mean, not the
+  // fastest ball. A bowler reading a delta next to their best-ever delivery
+  // would otherwise reasonably assume the two were the same number.
   if (Math.abs(delta) > band) {
-    return `${sign}${delta} ${unit} vs last session — bigger than the ±${band} band, so the change is real.`;
+    return `${sign}${delta} ${unit} on average vs last session — bigger than the ±${band} band, so the change is real.`;
   }
-  return `${sign}${delta} ${unit} vs last session — within the ±${band} band, so treat it as level.`;
+  return `${sign}${delta} ${unit} on average vs last session — within the ±${band} band, so treat it as level.`;
 }

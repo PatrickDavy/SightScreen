@@ -27,6 +27,7 @@ const session = (over: Partial<Session> = {}): Session => ({
   endedAt: AT + 60_000,
   deviceModel: 'Pixel 8',
   captureFps: 240,
+  scaleUncertainty: null,
   thermalEvents: [],
   calibrationId: null,
   weighting: 1,

@@ -40,6 +40,16 @@ export interface Session {
   endedAt: number | null;
   deviceModel: string | null;
   captureFps: number | null;
+  /**
+   * Fractional uncertainty of the scene scale this session was captured under,
+   * or null when it was never calibrated.
+   *
+   * A session property, like captureFps, because one calibration scales every
+   * ball in the spell. That is exactly why it is recorded rather than derived
+   * per delivery: it is the correlated part of the speed error, the part that
+   * averaging cannot reduce, and the session band is meaningless without it.
+   */
+  scaleUncertainty: number | null;
   thermalEvents: string[];
   calibrationId: string | null;
   weighting: number;

@@ -14,6 +14,8 @@ import {
   WorkloadEntry,
 } from '@/domain/types';
 
+import { sessionMeanBandKmh } from '@/domain/speedBand';
+
 import { Repos } from './types';
 
 type Row = Record<string, SqlValue>;
@@ -49,6 +51,7 @@ function rowToSession(r: Row): Session {
     endedAt: numOrNull(r.ended_at),
     deviceModel: strOrNull(r.device_model),
     captureFps: numOrNull(r.capture_fps),
+    scaleUncertainty: numOrNull(r.scale_uncertainty),
     thermalEvents: JSON.parse(str(r.thermal_events ?? '[]')) as string[],
     calibrationId: strOrNull(r.calibration_id),
     weighting: num(r.weighting),
@@ -95,6 +98,7 @@ const SESSION_FIELD_MAP: Record<string, string> = {
   endedAt: 'ended_at',
   deviceModel: 'device_model',
   captureFps: 'capture_fps',
+  scaleUncertainty: 'scale_uncertainty',
   thermalEvents: 'thermal_events',
   calibrationId: 'calibration_id',
   weighting: 'weighting',
@@ -120,17 +124,18 @@ export function createSqlRepos(db: SqlAdapter): Repos {
       `SELECT speed_band_kmh FROM delivery WHERE session_id = ? ORDER BY speed_kmh DESC LIMIT 1`,
       [session.id],
     )[0];
-    const avgBandRow = db.all<Row>(
-      `SELECT AVG(speed_band_kmh) AS b FROM delivery WHERE session_id = ?`,
-      [session.id],
-    )[0];
+    const avgKmh = balls ? round1(num(r.avg)) : null;
     return {
       session,
       balls,
       bestKmh: balls ? round1(num(r.best)) : null,
       bestBandKmh: balls && bestRow ? round1(num(bestRow.speed_band_kmh)) : null,
-      avgKmh: balls ? round1(num(r.avg)) : null,
-      avgBandKmh: balls && avgBandRow?.b != null ? round1(num(avgBandRow.b)) : null,
+      avgKmh,
+      // The band on a mean, not the mean of the bands. See sessionMeanBandKmh.
+      avgBandKmh:
+        avgKmh == null
+          ? null
+          : round1(sessionMeanBandKmh(avgKmh, session.scaleUncertainty, balls)),
       frames: r.frames == null ? null : num(r.frames),
     };
   }
@@ -173,10 +178,10 @@ export function createSqlRepos(db: SqlAdapter): Repos {
       insert(s) {
         db.run(
           `INSERT INTO session
-           (id, bowler_id, type, venue_id, started_at, ended_at, device_model, capture_fps,
+           (id, bowler_id, type, venue_id, started_at, ended_at, device_model, capture_fps, scale_uncertainty,
             thermal_events, calibration_id, weighting, status, processed_count, low_conf_override,
             clip_path, simulated)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
           [
             s.id,
             s.bowlerId,
@@ -186,6 +191,7 @@ export function createSqlRepos(db: SqlAdapter): Repos {
             s.endedAt,
             s.deviceModel,
             s.captureFps,
+            s.scaleUncertainty,
             JSON.stringify(s.thermalEvents),
             s.calibrationId,
             s.weighting,

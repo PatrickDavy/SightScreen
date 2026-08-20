@@ -34,6 +34,7 @@ const mkSession = (id: string, over: Partial<Session> = {}): Session => ({
   endedAt: null,
   deviceModel: null,
   captureFps: 240,
+  scaleUncertainty: null,
   thermalEvents: [],
   calibrationId: null,
   weighting: 1,
@@ -122,6 +123,7 @@ describe.each([
     repos.sessions.insert(mkSession('s1', { status: 'processing' }));
     repos.sessions.update('s1', {
       processedCount: 5,
+      scaleUncertainty: null,
       thermalEvents: ['serious@120s'],
       status: 'complete',
     });

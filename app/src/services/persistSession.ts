@@ -80,6 +80,9 @@ export function startSession(input: StartSessionInput): StartedSession {
     endedAt: null,
     deviceModel: input.deviceModel ?? null,
     captureFps: input.captureFps,
+    // The correlated part of every speed error in this spell, recorded once
+    // where it is known. Null when the bowler never calibrated.
+    scaleUncertainty: scale?.uncertainty ?? null,
     thermalEvents: [],
     calibrationId,
     weighting: WEIGHTING[input.sessionType],

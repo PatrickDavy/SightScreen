@@ -136,3 +136,33 @@ describe('what this means for the retest', () => {
     expect(requiredTapUnits).toBeLessThan(TAP_PRECISION_UNITS);
   });
 });
+
+describe('why the retest compares means and not best balls', () => {
+  /**
+   * The fastest ball is a maximum, so it is biased upward, and the bias grows
+   * with the number of deliveries — a best-of-30 beats a best-of-5 from the
+   * same bowler on the same day. It also gets no benefit from averaging, so its
+   * band is as wide as a band can be. Biased and imprecise at once.
+   */
+  const scale = { uncertainty: 0.02 };
+
+  it('narrows the band as the spell lengthens, which a single ball cannot', () => {
+    const e = errorFor(scale.uncertainty);
+    const oneBall = deliveryBandKmh(130, e);
+    expect(meanBandKmh(130, e, 6)).toBeLessThan(oneBall);
+    expect(meanBandKmh(130, e, 24)).toBeLessThan(meanBandKmh(130, e, 6));
+  });
+
+  it('rewards a longer spell with a more confident verdict, not a higher number', () => {
+    const e = errorFor(scale.uncertainty);
+    const combined = (b: number) => Math.SQRT2 * b;
+    // A 4 km/h improvement, judged on single balls versus on 20-ball means.
+    expect(combined(deliveryBandKmh(130, e))).toBeGreaterThan(4);
+    expect(combined(meanBandKmh(130, e, 20))).toBeLessThan(4);
+  });
+
+  it('still cannot go below the calibration floor, however long the spell', () => {
+    const e = errorFor(scale.uncertainty);
+    expect(meanBandKmh(130, e, 500)).toBeGreaterThanOrEqual(bandFloorKmh(130, e));
+  });
+});

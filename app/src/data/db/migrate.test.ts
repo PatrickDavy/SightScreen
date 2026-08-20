@@ -10,7 +10,7 @@
 import Database from 'better-sqlite3';
 
 import { SqlAdapter, SqlValue } from './adapter';
-import { migrate } from './schema';
+import { SCHEMA_VERSION, migrate } from './schema';
 
 function adapter(db: Database.Database): SqlAdapter {
   return {
@@ -84,6 +84,45 @@ describe('migrating a database that predates the change', () => {
     expect(row.reference_m).toBeCloseTo(1.22);
   });
 
+  it('adds session.scale_uncertainty to an existing table', () => {
+    const db = new Database(':memory:');
+    db.prepare(
+      `CREATE TABLE session (
+        id TEXT PRIMARY KEY,
+        bowler_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        venue_id TEXT,
+        started_at INTEGER NOT NULL,
+        ended_at INTEGER,
+        device_model TEXT,
+        capture_fps INTEGER,
+        thermal_events TEXT NOT NULL DEFAULT '[]',
+        calibration_id TEXT,
+        weighting REAL NOT NULL DEFAULT 1,
+        status TEXT NOT NULL,
+        processed_count INTEGER NOT NULL DEFAULT 0,
+        low_conf_override INTEGER NOT NULL DEFAULT 0,
+        clip_path TEXT,
+        simulated INTEGER NOT NULL DEFAULT 0
+      )`,
+    ).run();
+    db.prepare(
+      `INSERT INTO session (id, bowler_id, type, started_at, status)
+       VALUES ('s1','b1','net',1000,'complete')`,
+    ).run();
+
+    migrate(adapter(db));
+
+    expect(columns(db, 'session')).toContain('scale_uncertainty');
+    // Nullable and left null: a session captured before this was recorded does
+    // not know its calibration quality, and inventing one would be worse than
+    // admitting it. sessionMeanBandKmh reads null as uncalibrated and says so.
+    const row = db.prepare(`SELECT scale_uncertainty FROM session WHERE id='s1'`).get() as {
+      scale_uncertainty: number | null;
+    };
+    expect(row.scale_uncertainty).toBeNull();
+  });
+
   it('is idempotent — running it twice changes nothing', () => {
     const db = new Database(':memory:');
     migrate(adapter(db));
@@ -98,6 +137,6 @@ describe('migrating a database that predates the change', () => {
     const row = db
       .prepare(`SELECT value FROM settings WHERE key = 'schema_version'`)
       .get() as { value: string };
-    expect(Number(row.value)).toBe(3);
+    expect(Number(row.value)).toBe(SCHEMA_VERSION);
   });
 });

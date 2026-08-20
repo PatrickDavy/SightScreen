@@ -10,6 +10,8 @@ import {
   WorkloadEntry,
 } from '@/domain/types';
 
+import { sessionMeanBandKmh } from '@/domain/speedBand';
+
 import { Repos } from './types';
 
 export interface MemoryStore {
@@ -52,7 +54,8 @@ export function createMemoryRepos(store: MemoryStore = emptyStore(), onChange?: 
     }
     const best = ds.reduce((a, b) => (b.speedKmh > a.speedKmh ? b : a));
     const avg = ds.reduce((s, d) => s + d.speedKmh, 0) / ds.length;
-    const avgBand = ds.reduce((s, d) => s + d.speedBandKmh, 0) / ds.length;
+    // The band on a mean, not the mean of the bands. See sessionMeanBandKmh.
+    const avgBand = sessionMeanBandKmh(avg, session.scaleUncertainty, ds.length);
     return {
       session,
       balls: ds.length,

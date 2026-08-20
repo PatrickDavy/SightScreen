@@ -94,3 +94,21 @@ export function meanBandKmh(speedKmh: number, error: SpeedError, n: number): num
 export function bandFloorKmh(speedKmh: number, error: SpeedError): number {
   return Math.abs(speedKmh) * error.correlated;
 }
+
+/**
+ * Band on a session's mean speed, from what the session recorded about its own
+ * calibration.
+ *
+ * This replaced averaging the per-delivery bands, which was wrong in both
+ * directions at once: it never shrank with the delivery count, as the
+ * independent part should, and it offered no floor, as the correlated part
+ * must. The result was a number that looked like an uncertainty and behaved
+ * like neither component of one.
+ */
+export function sessionMeanBandKmh(
+  meanSpeedKmh: number,
+  scaleUncertainty: number | null,
+  deliveries: number,
+): number {
+  return meanBandKmh(meanSpeedKmh, errorFor(scaleUncertainty), deliveries);
+}

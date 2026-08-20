@@ -4,7 +4,7 @@
  *  any server would be a replica. */
 import { SqlAdapter } from './adapter';
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 const TABLES = [
   `CREATE TABLE IF NOT EXISTS bowler (
@@ -29,6 +29,7 @@ const TABLES = [
     ended_at INTEGER,
     device_model TEXT,
     capture_fps INTEGER,
+    scale_uncertainty REAL,
     thermal_events TEXT NOT NULL DEFAULT '[]',
     calibration_id TEXT,
     weighting REAL NOT NULL DEFAULT 1,
@@ -134,6 +135,13 @@ export function migrate(db: SqlAdapter): void {
     // correct for them rather than merely convenient.
     if (!hasColumn(db, 'calibration', 'reference_m')) {
       db.run(`ALTER TABLE calibration ADD COLUMN reference_m REAL NOT NULL DEFAULT 1.22`);
+    }
+
+    // v3 → v4: session.scale_uncertainty. Nullable with no default, because
+    // sessions captured before this was recorded genuinely do not know their
+    // calibration quality, and guessing one would be worse than admitting it.
+    if (!hasColumn(db, 'session', 'scale_uncertainty')) {
+      db.run(`ALTER TABLE session ADD COLUMN scale_uncertainty REAL`);
     }
 
     db.run(`INSERT OR REPLACE INTO settings(key, value) VALUES ('schema_version', ?)`, [

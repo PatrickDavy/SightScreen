@@ -69,14 +69,30 @@ export function ReviewScreen({ navigation, route }: Props) {
 
   const { session } = summary;
 
+  /**
+   * Session-on-session comparison, on the mean rather than the fastest ball.
+   *
+   * The fastest ball is the wrong statistic for this in two ways. It is a
+   * maximum, so it is biased upward, and the bias grows with the number of
+   * deliveries — comparing a best-of-5 against a best-of-30 flatters the longer
+   * session for no reason connected to bowling. And a single ball gets no
+   * benefit from averaging, so its band is as wide as a band can be, which made
+   * the comparison both biased and imprecise at once.
+   *
+   * The mean is unbiased and its band narrows with the count (see
+   * sessionMeanBandKmh), so a longer spell now earns a more confident verdict
+   * instead of a flatteringly higher number. The fastest ball is still shown —
+   * it is what a bowler wants to know — it just no longer decides whether a
+   * change was real.
+   */
   const delta =
-    summary.bestKmh !== null &&
-    summary.bestBandKmh !== null &&
-    previous?.bestKmh != null &&
-    previous.bestBandKmh != null
+    summary.avgKmh !== null &&
+    summary.avgBandKmh !== null &&
+    previous?.avgKmh != null &&
+    previous.avgBandKmh != null
       ? compareRetest(
-          { speedKmh: previous.bestKmh, bandKmh: previous.bestBandKmh },
-          { speedKmh: summary.bestKmh, bandKmh: summary.bestBandKmh },
+          { speedKmh: previous.avgKmh, bandKmh: previous.avgBandKmh },
+          { speedKmh: summary.avgKmh, bandKmh: summary.avgBandKmh },
         )
       : null;
 
