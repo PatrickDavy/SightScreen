@@ -226,6 +226,7 @@ describe.each([
       stumpX: 0.7,
       stumpY: 0.62,
       pitchLengthM: 20.12,
+      referenceM: 1.22,
       createdAt: 1000,
     });
     expect(repos.calibrations.byFingerprint('fp1')?.creaseX).toBe(0.3);

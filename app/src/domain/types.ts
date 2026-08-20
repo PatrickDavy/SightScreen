@@ -115,6 +115,14 @@ export interface Calibration {
   stumpX: number;
   stumpY: number;
   pitchLengthM: number;
+  /**
+   * The real-world separation the two marks were taken to be, in metres.
+   *
+   * Persisted because the taps alone do not say what they measured. A venue
+   * calibrated against the return crease and replayed as crease-to-stumps would
+   * scale every speed by exactly two, and nothing downstream could tell.
+   */
+  referenceM: number;
   createdAt: number;
 }
 

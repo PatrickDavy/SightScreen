@@ -4,7 +4,7 @@
  *  any server would be a replica. */
 import { SqlAdapter } from './adapter';
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 const TABLES = [
   `CREATE TABLE IF NOT EXISTS bowler (
@@ -84,6 +84,7 @@ const TABLES = [
     stump_x REAL NOT NULL,
     stump_y REAL NOT NULL,
     pitch_length_m REAL NOT NULL DEFAULT 20.12,
+    reference_m REAL NOT NULL DEFAULT 1.22,
     created_at INTEGER NOT NULL
   )`,
   `CREATE TABLE IF NOT EXISTS retest (
@@ -126,6 +127,13 @@ export function migrate(db: SqlAdapter): void {
     // than a version comparison so it converges from any prior state.
     if (!hasColumn(db, 'session', 'simulated')) {
       db.run(`ALTER TABLE session ADD COLUMN simulated INTEGER NOT NULL DEFAULT 0`);
+    }
+
+    // v2 → v3: calibration.reference_m. Existing rows were all calibrated
+    // against the crease-to-stumps span, so the default is that and it is
+    // correct for them rather than merely convenient.
+    if (!hasColumn(db, 'calibration', 'reference_m')) {
+      db.run(`ALTER TABLE calibration ADD COLUMN reference_m REAL NOT NULL DEFAULT 1.22`);
     }
 
     db.run(`INSERT OR REPLACE INTO settings(key, value) VALUES ('schema_version', ?)`, [

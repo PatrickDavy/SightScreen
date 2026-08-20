@@ -380,15 +380,26 @@ export function createSqlRepos(db: SqlAdapter): Repos {
           stumpX: num(r.stump_x),
           stumpY: num(r.stump_y),
           pitchLengthM: num(r.pitch_length_m),
+          referenceM: num(r.reference_m),
           createdAt: num(r.created_at),
         };
       },
       save(c) {
         db.run(
           `INSERT OR REPLACE INTO calibration
-           (id, venue_fingerprint, crease_x, crease_y, stump_x, stump_y, pitch_length_m, created_at)
-           VALUES (?,?,?,?,?,?,?,?)`,
-          [c.id, c.venueFingerprint, c.creaseX, c.creaseY, c.stumpX, c.stumpY, c.pitchLengthM, c.createdAt],
+           (id, venue_fingerprint, crease_x, crease_y, stump_x, stump_y, pitch_length_m, reference_m, created_at)
+           VALUES (?,?,?,?,?,?,?,?,?)`,
+          [
+            c.id,
+            c.venueFingerprint,
+            c.creaseX,
+            c.creaseY,
+            c.stumpX,
+            c.stumpY,
+            c.pitchLengthM,
+            c.referenceM,
+            c.createdAt,
+          ],
         );
       },
     },
