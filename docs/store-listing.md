@@ -110,9 +110,13 @@ metres.
 
 ## Still to decide
 
-- **Feature graphic and screenshots** (#62, #63). Screenshots cannot be honest
-  until the real pipeline produces real numbers, since the alternative is
-  putting synthesised speeds in a store listing.
-- **Brand mark** (#60). No logo exists; the design system flagged it for the
-  brand owner.
+- **Screenshots** (#63). Cannot be honest until the real pipeline produces real
+  numbers, since the alternative is putting synthesised speeds in a store
+  listing.
 - **Contact email** for the listing.
+
+## Settled
+
+- **Brand mark, icon and feature graphic** (#60, #61, #62) — `docs/brand/`.
+- **Tablets are excluded** (#65) — `docs/tablet-support.md`. Phone screenshots
+  only; no tablet slots to fill.

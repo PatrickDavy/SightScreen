@@ -50,6 +50,9 @@ Camera. Expo Go cannot run this app's capture path at all.
 - [ ] Upload the AAB to the open testing track.
 - [ ] Confirm the upload key is the enrolled one (#15). Losing it is close to
       unrecoverable.
+- [ ] Device exclusion rules still in place — tablets are excluded by decision
+      (`docs/tablet-support.md`), and a new release does not carry the rule
+      forward on its own.
 - [ ] Source maps uploaded, once crash reporting exists (#57). Without them
       every stack trace is unreadable and the crash reports are worthless.
 - [ ] Review the **pre-launch report** before rolling out. It runs the build on
